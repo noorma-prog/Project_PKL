@@ -22,7 +22,13 @@
         }
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background: linear-gradient(135deg, #0b1329 0%, #172554 50%, #0f172a 100%);
+            background-image:
+                linear-gradient(rgba(11, 19, 41, 0.78), rgba(23, 37, 84, 0.72)),
+                url("{{ asset('images/gambar%20polda%20kalsel.jpg') }}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
             min-height: 100vh;
             color: #334155;
             display: flex;
@@ -111,6 +117,22 @@
         .demo-pill:hover {
             background: #e2e8f0;
             border-color: #94a3b8;
+        }
+        @media (max-width: 576px) {
+            body {
+                align-items: flex-start;
+                padding: 1rem 0.75rem;
+                background-position: center;
+            }
+            .auth-card {
+                border-radius: 0.75rem;
+            }
+            .auth-header {
+                padding: 1.75rem 1rem;
+            }
+            .auth-body {
+                padding: 1.5rem 1rem;
+            }
         }
     </style>
 </head>
