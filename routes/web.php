@@ -2,9 +2,14 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\PasswordSetupController;
 use App\Http\Controllers\PadalController;
 use App\Http\Controllers\TeknisiController;
 use App\Http\Controllers\UserTicketController;
+use App\Models\User;
+use App\Services\EmailVerificationSender;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -26,6 +31,70 @@ Route::middleware('guest')->group(function () {
     Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
     Route::post('/register', [AuthController::class, 'register'])->name('register.post');
 });
+
+Route::get('/password/reset/{token}', [PasswordSetupController::class, 'show'])
+    ->name('password.reset');
+Route::post('/password/reset', [PasswordSetupController::class, 'update'])
+    ->middleware('throttle:6,1')
+    ->name('password.update');
+
+Route::get('/email/verify', function () {
+    return view('auth.verify-email');
+})->middleware('auth')->name('verification.notice');
+
+Route::get('/email/verify/{id}/{hash}', function (Request $request, $id, $hash) {
+    $user = User::findOrFail($id);
+    abort_unless(hash_equals(sha1($user->getEmailForVerification()), $hash), 403);
+
+    if (!$user->hasVerifiedEmail()) {
+        $user->markEmailAsVerified();
+        $user->save();
+    }
+
+    $user->requires_email_verification = false;
+    $user->save();
+
+    if (Auth::id() === $user->id) {
+        if (!$user->is_active || (in_array($user->role, [User::ROLE_PADAL, User::ROLE_TEKNISI], true)
+            && !$user->isApprovalActive())) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')->with(
+                'error',
+                'Email berhasil diverifikasi, tetapi akun belum aktif. Hubungi Administrator.'
+            );
+        }
+
+        $destination = match ($user->role) {
+            User::ROLE_ADMIN => 'admin.dashboard',
+            User::ROLE_PADAL => 'padal.dashboard',
+            User::ROLE_TEKNISI => 'teknisi.dashboard',
+            default => 'user.dashboard',
+        };
+
+        return redirect()->route($destination)->with('success', 'Email berhasil diverifikasi.');
+    }
+
+    return redirect()->route('login')->with('success', 'Email berhasil diverifikasi. Silakan login kembali.');
+})->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
+
+Route::post('/email/verification-notification', function (Request $request) {
+    /** @var User $user */
+    $user = $request->user();
+
+    if ($user->hasVerifiedEmail()
+        || (!$user->requiresEmailVerification() && $user->role !== User::ROLE_USER)) {
+        return back()->with('error', 'Alamat email akun ini tidak memerlukan verifikasi ulang.');
+    }
+
+    if (!app(EmailVerificationSender::class)->send($user)) {
+        return back()->with('error', EmailVerificationSender::FAILURE_MESSAGE);
+    }
+
+    return back()->with('success', 'Tautan verifikasi baru telah dikirim.');
+})->middleware(['auth', 'throttle:6,1'])->name('verification.send');
 
 // Logout & Profil Umum (Semua Role yang Login) - Use Case: Logout
 Route::middleware('auth')->group(function () {
@@ -66,9 +135,14 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/users', [AdminController::class, 'users'])->name('users.index');
     Route::get('/users/create', [AdminController::class, 'createUser'])->name('users.create');
     Route::post('/users', [AdminController::class, 'storeUser'])->name('users.store');
+    Route::post('/users/{id}/activation-invitation', [AdminController::class, 'sendActivationInvitation'])
+        ->name('users.activation-invitation');
     Route::get('/users/{id}', [AdminController::class, 'showUser'])->name('users.show');
     Route::get('/users/{id}/edit', [AdminController::class, 'editUser'])->name('users.edit');
     Route::put('/users/{id}', [AdminController::class, 'updateUser'])->name('users.update');
+    Route::patch('/users/{id}/approve', [AdminController::class, 'approveUser'])->name('users.approve');
+    Route::patch('/users/{id}/reject', [AdminController::class, 'rejectUser'])->name('users.reject');
+    Route::patch('/users/{id}/status', [AdminController::class, 'toggleUserStatus'])->name('users.toggle-status');
     Route::delete('/users/{id}', [AdminController::class, 'destroyUser'])->name('users.destroy');
 
     // Mengelola Kategori Gangguan (CRUD)
@@ -100,6 +174,7 @@ Route::middleware(['auth', 'role:padal'])->prefix('padal')->name('padal.')->grou
     Route::get('/tickets/{id}', [PadalController::class, 'showTicket'])->name('tickets.show');
     Route::post('/tickets/{id}/accept', [PadalController::class, 'acceptAssignment'])->name('tickets.accept');
     Route::post('/tickets/{id}/reject', [PadalController::class, 'rejectAssignment'])->name('tickets.reject');
+    Route::post('/tickets/{id}/technicians', [PadalController::class, 'updateTicketTechnicians'])->name('tickets.technicians');
     Route::post('/tickets/{id}/history-note', [PadalController::class, 'addHistoryNote'])->name('tickets.history-note');
     Route::post('/tickets/{id}/complete', [PadalController::class, 'completeTicket'])->name('tickets.complete');
     

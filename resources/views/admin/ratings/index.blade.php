@@ -31,7 +31,7 @@
                         <option value="">-- Semua Padal --</option>
                         @foreach($padals as $padal)
                             <option value="{{ $padal->id }}" {{ request('padal_id') == $padal->id ? 'selected' : '' }}>
-                                {{ $padal->name }}
+                            {{ $padal->nama_padal }}
                             </option>
                         @endforeach
                     </select>
@@ -51,6 +51,47 @@
                     <button type="submit" class="btn btn-primary w-100"><i class="bi bi-filter"></i> Filter</button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white py-3">
+        <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-bar-chart-line text-primary me-2"></i>Rata-rata dan Jumlah Rating per Padal</h6>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light small text-secondary">
+                    <tr>
+                        <th class="ps-3">Unit Padal</th>
+                        <th>Pemimpin</th>
+                        <th>Rata-rata Rating</th>
+                        <th class="text-end pe-3">Jumlah Rating</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($padals as $padal)
+                        <tr>
+                            <td class="ps-3 fw-semibold text-dark">{{ $padal->nama_padal }}</td>
+                            <td>{{ $padal->leader?->name ?? '-' }}</td>
+                            <td>
+                                @if($padal->ratings_count)
+                                    <span class="text-warning"><i class="bi bi-star-fill me-1"></i></span>
+                                    {{ number_format((float) $padal->ratings_avg_rating, 1) }} / 5.0
+                                @else
+                                    <span class="text-muted">Belum ada rating</span>
+                                @endif
+                            </td>
+                            <td class="text-end pe-3">{{ $padal->ratings_count }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="4" class="text-center py-4 text-muted">Belum ada unit Padal terdaftar.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
@@ -85,7 +126,7 @@
                                 <small class="text-muted">{{ $rating->user->satuan_kerja }}</small>
                             </td>
                             <td>
-                                <div class="fw-semibold text-dark">{{ $rating->padal->name }}</div>
+                                <div class="fw-semibold text-dark">{{ $rating->padal?->nama_padal ?? 'Padal tidak tersedia' }}</div>
                             </td>
                             <td>
                                 <span class="badge bg-warning text-dark fs-6">

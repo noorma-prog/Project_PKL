@@ -53,6 +53,24 @@
     </div>
 </div>
 
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-people-fill text-primary me-2"></i>Anggota Teknisi Tim Anda ({{ $members->count() }})</h6>
+        <a href="{{ route('padal.members.index') }}" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-person-plus me-1"></i> Tambah Anggota
+        </a>
+    </div>
+    <div class="card-body">
+        @forelse($members as $member)
+            <span class="badge bg-light text-dark border me-1 mb-1">
+                {{ $member->name }} &mdash; {{ $member->satuan_kerja ?? 'Bid TIK' }}
+            </span>
+        @empty
+            <p class="text-muted small mb-0">Belum ada teknisi di tim. Tambahkan anggota untuk dapat memilih teknisi pada penugasan tiket.</p>
+        @endforelse
+    </div>
+</div>
+
 <!-- Laporan Menunggu Konfirmasi Padal -->
 @if($pendingTickets->isNotEmpty())
     <div class="card border-warning shadow-sm mb-4">
@@ -138,9 +156,11 @@
                                 <div class="fw-semibold text-dark">{{ $ticket->title }}</div>
                             </td>
                             <td>
-                                @foreach($ticket->technicians as $tech)
+                                @forelse($ticket->technicians as $tech)
                                     <span class="badge bg-info text-dark me-1"><i class="bi bi-person me-1"></i>{{ $tech->name }}</span>
-                                @endforeach
+                                @empty
+                                    <span class="text-muted small">Belum ditugaskan</span>
+                                @endforelse
                             </td>
                             <td><small class="text-muted">{{ $ticket->started_at ? $ticket->started_at->diffForHumans() : '-' }}</small></td>
                             <td class="text-end pe-3">

@@ -5,6 +5,7 @@
 @section('page_subtitle', 'Manajemen personel teknisi yang bertugas di dalam unit ' . $padal->nama_padal)
 
 @section('content')
+@php($selectedTechnicianIds = old('technician_ids', []))
 <div class="row g-4">
     <!-- Ringkasan Unit Padal -->
     <div class="col-md-4">
@@ -54,16 +55,19 @@
                         @csrf
                         <div class="mb-3">
                             <label class="form-label small fw-semibold text-secondary">Pilih Personel Teknisi</label>
-                            <select name="user_id" class="form-select @error('user_id') is-invalid @enderror" required>
-                                <option value="">-- Pilih Teknisi --</option>
+                            <select name="technician_ids[]" class="form-select @error('technician_ids') is-invalid @enderror @error('technician_ids.*') is-invalid @enderror" size="5" multiple required>
                                 @foreach($availableTechnicians as $tech)
-                                    <option value="{{ $tech->id }}">
+                                    <option value="{{ $tech->id }}" @selected(is_array($selectedTechnicianIds) && in_array($tech->id, $selectedTechnicianIds))>
                                         {{ $tech->name }} (NRP: {{ $tech->nrp_nip ?? '-' }}) - {{ $tech->satuan_kerja ?? 'Bid TIK' }}
                                     </option>
                                 @endforeach
                             </select>
-                            @error('user_id')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                            <small class="form-text text-muted">Gunakan Ctrl (Windows) atau Command (Mac) untuk memilih beberapa teknisi.</small>
+                            @error('technician_ids')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
+                            @error('technician_ids.*')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
                         </div>
                         <button type="submit" class="btn btn-primary w-100 btn-sm">

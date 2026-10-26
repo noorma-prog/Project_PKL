@@ -41,6 +41,7 @@
 @endsection
 
 @section('content')
+@php($selectedTechnicianIds = old('technician_ids', $ticket->technicians->modelKeys()))
 <div class="mb-3 d-flex justify-content-between align-items-center">
     <a href="{{ route('padal.tickets.index') }}" class="btn btn-sm btn-outline-secondary">
         <i class="bi bi-arrow-left me-1"></i> Kembali ke Daftar Penugasan
@@ -83,6 +84,9 @@
                             @error('technician_ids')
                                 <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
+                            @if($availableTechnicians->isEmpty())
+                                <small class="text-danger">Belum ada anggota Teknisi aktif di tim. <a href="{{ route('padal.members.index') }}">Tambahkan anggota tim</a> sebelum menerima penugasan.</small>
+                            @endif
                         </div>
 
                         <div class="mb-3">
@@ -90,7 +94,7 @@
                             <textarea name="padal_notes" id="padal_notes" rows="2" class="form-control" placeholder="Tuliskan arahan peralatan yang harus disiapkan atau penanganan khusus...">{{ old('padal_notes') }}</textarea>
                         </div>
 
-                        <button type="submit" class="btn btn-primary fw-bold px-4">
+                        <button type="submit" class="btn btn-primary fw-bold px-4" @disabled($availableTechnicians->isEmpty())>
                             <i class="bi bi-check-circle-fill me-1"></i> Terima Penugasan & Mulai Penanganan
                         </button>
                     </form>
@@ -164,13 +168,18 @@
                             @foreach($availableTechnicians as $tech)
                                 <div class="form-check mb-1">
                                     <input class="form-check-input" type="checkbox" name="technician_ids[]" value="{{ $tech->id }}" id="techUpdate{{ $tech->id }}"
-                                           {{ $ticket->technicians->contains('id', $tech->id) ? 'checked' : '' }}>
+                                           {{ is_array($selectedTechnicianIds) && in_array($tech->id, $selectedTechnicianIds) ? 'checked' : '' }}>
                                     <label class="form-check-label text-dark" for="techUpdate{{ $tech->id }}">
-                                        {{ $tech->name }} ({{ $tech->nrp_nip ?? '-' }})
+                                        {{ $tech->name }} &mdash; {{ $tech->satuan_kerja ?? 'Bid TIK' }} ({{ $tech->nrp_nip ?? '-' }})
                                     </label>
                                 </div>
+                            @empty
+                                <small class="text-muted">Belum ada anggota Teknisi aktif yang dapat dipilih. <a href="{{ route('padal.members.index') }}">Kelola anggota tim</a>.</small>
                             @endforeach
                         </div>
+                        @error('technician_ids')
+                            <div class="text-danger small mb-2">{{ $message }}</div>
+                        @enderror
                         <button type="submit" class="btn btn-sm btn-outline-primary">
                             <i class="bi bi-arrow-repeat me-1"></i> Simpan Perubahan Anggota
                         </button>

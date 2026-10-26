@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,7 +13,7 @@ class RoleMiddleware
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  Closure(Request): Response  $next
      * @param  string  ...$roles
      */
     public function handle(Request $request, Closure $next, ...$roles): Response
@@ -21,6 +22,7 @@ class RoleMiddleware
             return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
         }
 
+        /** @var User $user */
         $user = Auth::user();
 
         // Periksa apakah akun aktif
@@ -32,12 +34,33 @@ class RoleMiddleware
             return redirect()->route('login')->with('error', 'Akun Anda telah dinonaktifkan oleh Administrator.');
         }
 
+        if (($user->role === User::ROLE_USER || $user->requiresEmailVerification())
+            && !$user->hasVerifiedEmail()) {
+            return redirect()->route('verification.notice')
+                ->with('error', 'Verifikasi alamat email Anda terlebih dahulu.');
+        }
+
+        if (in_array($user->role, ['padal', 'teknisi'], true)
+            && !$user->isApprovalActive()) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            $message = $user->isApprovalRejected()
+                ? 'Pendaftaran akun Anda ditolak oleh Administrator.'
+                : 'Pendaftaran akun Anda masih menunggu persetujuan Administrator.';
+
+            return redirect()->route('login')->with('error', $message);
+        }
+
         // Jika tidak ada batasan role spesifik atau role pengguna cocok dengan salah satu role yang diizinkan
         if (empty($roles) || in_array($user->role, $roles, true)) {
-            return $next($request);
+            /** @var Response $response */
+            $response = $next($request);
+            return $response;
         }
 
         // Jika tidak berhak mengakses
-        abort(403, 'Akses ditolak. Anda tidak memiliki izin untuk mengakses halaman ini.');
+        return response('Akses ditolak. Anda tidak memiliki izin untuk mengakses halaman ini.', 403);
     }
 }

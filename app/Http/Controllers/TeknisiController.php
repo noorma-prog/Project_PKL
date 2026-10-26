@@ -16,10 +16,9 @@ class TeknisiController extends Controller
     {
         $technician = Auth::user();
 
-        // Mengambil ID Padal tempat teknisi ini terdaftar sebagai anggota (PADAL_ANGGOTA)
-        $padalIds = $technician->padalTeams()->pluck('padals.id')->toArray();
-
-        $ticketQuery = Ticket::whereIn('padal_id', $padalIds);
+        $ticketQuery = Ticket::whereHas('technicians', function ($query) use ($technician) {
+            $query->where('users.id', $technician->id);
+        });
 
         $stats = [
             'total_penugasan' => (clone $ticketQuery)->count(),
@@ -40,15 +39,16 @@ class TeknisiController extends Controller
     }
 
     /**
-     * Daftar seluruh tiket yang ditangani oleh unit Padal tempat teknisi terdaftar
+     * Daftar tiket yang secara langsung ditugaskan kepada teknisi ini
      */
     public function tickets(Request $request)
     {
         $technician = Auth::user();
-        $padalIds = $technician->padalTeams()->pluck('padals.id')->toArray();
 
         $query = Ticket::with(['user', 'category', 'padal.leader', 'rating'])
-            ->whereIn('padal_id', $padalIds);
+            ->whereHas('technicians', function ($technicianQuery) use ($technician) {
+                $technicianQuery->where('users.id', $technician->id);
+            });
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -74,15 +74,13 @@ class TeknisiController extends Controller
     }
 
     /**
-     * Detail tiket (Hak Akses Read-Only murni untuk Teknisi Sesuai Use Case: Melihat Detail Tiket)
+     * Detail tiket yang ditugaskan langsung (hak akses read-only)
      */
     public function showTicket($id)
     {
         $technician = Auth::user();
-        $padalIds = $technician->padalTeams()->pluck('padals.id')->toArray();
 
-        // Teknisi hanya dapat melihat tiket dari Padal tempat ia menjadi anggota
-        $ticket = Ticket::with([
+        $ticket = $technician->technicianTickets()->with([
             'user', 
             'category', 
             'padal.leader', 
@@ -90,8 +88,9 @@ class TeknisiController extends Controller
             'diperiksaOleh', 
             'ditugaskanOleh', 
             'rating', 
-            'histories.user'
-        ])->whereIn('padal_id', $padalIds)->findOrFail($id);
+            'histories.user',
+            'technicians',
+        ])->findOrFail($id);
 
         return view('teknisi.tickets.show', compact('ticket'));
     }

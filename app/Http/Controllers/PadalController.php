@@ -8,10 +8,13 @@ use App\Models\PadalAnggota;
 use App\Models\Ticket;
 use App\Models\TicketRating;
 use App\Models\TicketStatusHistory;
+use App\Models\TicketTechnicianAssignment;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class PadalController extends Controller
 {
@@ -64,14 +67,16 @@ class PadalController extends Controller
             ->get();
 
         // Laporan aktif dalam pengerjaan
-        $activeTickets = Ticket::with(['user', 'category'])
+        $activeTickets = Ticket::with(['user', 'category', 'technicians'])
             ->where('padal_id', $padal->id)
             ->where('status', Ticket::STATUS_DALAM_PENANGANAN)
             ->latest()
             ->take(5)
             ->get();
 
-        return view('padal.dashboard', compact('stats', 'pendingTickets', 'activeTickets', 'padal'));
+        $members = $padal->members()->orderBy('name')->get();
+
+        return view('padal.dashboard', compact('stats', 'pendingTickets', 'activeTickets', 'padal', 'members'));
     }
 
     /**
@@ -118,16 +123,28 @@ class PadalController extends Controller
         $padal = $this->getCurrentPadal();
 
         $ticket = Ticket::with([
-            'user', 
-            'category', 
-            'diperiksaOleh', 
-            'ditugaskanOleh', 
-            'padal.members', 
-            'rating', 
-            'histories.user'
+            'user',
+            'category',
+            'diperiksaOleh',
+            'ditugaskanOleh',
+            'padal.members',
+            'technicians',
+            'rating',
+            'histories.user',
         ])->where('padal_id', $padal->id)->findOrFail($id);
 
-        return view('padal.tickets.show', compact('ticket', 'padal'));
+        $availableTechnicians = $padal->members()
+            ->where('users.role', User::ROLE_TEKNISI)
+            ->where('users.is_active', true)
+            ->where('users.approval_status', User::APPROVAL_ACTIVE)
+            ->where(function ($query) {
+                $query->where('users.requires_email_verification', false)
+                    ->orWhereNotNull('users.email_verified_at');
+            })
+            ->orderBy('users.name')
+            ->get();
+
+        return view('padal.tickets.show', compact('ticket', 'padal', 'availableTechnicians'));
     }
 
     /**
@@ -142,12 +159,40 @@ class PadalController extends Controller
             return back()->with('error', 'Hanya laporan dengan status Menunggu Konfirmasi Padal yang dapat diterima.');
         }
 
-        $request->validate([
-            'notes' => ['nullable', 'string', 'max:500'],
+        $validated = $request->validate([
+            'technician_ids' => ['required', 'array', 'min:1'],
+            'technician_ids.*' => ['required', 'integer', 'distinct'],
+            'padal_notes' => ['nullable', 'string', 'max:500'],
         ]);
 
-        return DB::transaction(function () use ($ticket, $padal, $request) {
+        return DB::transaction(function () use ($ticket, $padal, $validated) {
+            $ticket = Ticket::whereKey($ticket->id)->lockForUpdate()->firstOrFail();
+            if ($ticket->status !== Ticket::STATUS_MENUNGGU_KONFIRMASI_PADAL) {
+                return back()->with('error', 'Penugasan ini sudah diproses sebelumnya.');
+            }
+
+            $technicianIds = array_map('intval', $validated['technician_ids']);
+            $eligibleIds = $padal->members()
+                ->where('users.role', User::ROLE_TEKNISI)
+                ->where('users.is_active', true)
+                ->where('users.approval_status', User::APPROVAL_ACTIVE)
+                ->where(function ($query) {
+                    $query->where('users.requires_email_verification', false)
+                        ->orWhereNotNull('users.email_verified_at');
+                })
+                ->whereIn('users.id', $technicianIds)
+                ->pluck('users.id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+
+            if (count($eligibleIds) !== count(array_unique($technicianIds))) {
+                throw ValidationException::withMessages([
+                    'technician_ids' => 'Pilih hanya teknisi aktif yang sudah menjadi anggota tim Padal Anda.',
+                ]);
+            }
+
             $oldStatus = $ticket->status;
+            $this->updateTicketTechnicianAssignments($ticket, $technicianIds);
 
             $ticket->status = Ticket::STATUS_DALAM_PENANGANAN;
             $ticket->started_at = now();
@@ -158,7 +203,7 @@ class PadalController extends Controller
                 'user_id' => Auth::id(),
                 'status_from' => $oldStatus,
                 'status_to' => Ticket::STATUS_DALAM_PENANGANAN,
-                'notes' => 'Penugasan DITERIMA oleh Perwira Pengendali (' . Auth::user()->name . ' - ' . $padal->nama_padal . '). Penanganan teknis dimulai.' . ($request->filled('notes') ? ' Catatan: ' . $request->notes : ''),
+                'notes' => 'Penugasan DITERIMA oleh Perwira Pengendali (' . Auth::user()->name . ' - ' . $padal->nama_padal . '). Penanganan teknis dimulai.' . (!empty($validated['padal_notes']) ? ' Catatan: ' . $validated['padal_notes'] : ''),
             ]);
 
             return redirect()->route('padal.tickets.show', $ticket->id)
@@ -284,13 +329,16 @@ class PadalController extends Controller
     public function members()
     {
         $padal = $this->getCurrentPadal();
-        $members = $padal->members()->withPivot('id', 'tanggal_bergabung')->get();
+        $members = $padal->members()
+            ->withPivot('id', 'tanggal_bergabung')
+            ->orderBy('users.name')
+            ->get();
 
         // Teknisi yang belum masuk ke dalam Padal ini
         $existingMemberIds = $padal->members()->pluck('users.id')->toArray();
-        $availableTechnicians = User::where('role', User::ROLE_TEKNISI)
-            ->where('is_active', true)
+        $availableTechnicians = $this->eligibleTechnicians()
             ->whereNotIn('id', $existingMemberIds)
+            ->orderBy('name')
             ->get();
 
         return view('padal.members.index', compact('padal', 'members', 'availableTechnicians'));
@@ -301,29 +349,149 @@ class PadalController extends Controller
         $padal = $this->getCurrentPadal();
 
         $validated = $request->validate([
-            'user_id' => ['required', 'exists:users,id'],
+            'technician_ids' => ['required', 'array', 'min:1'],
+            'technician_ids.*' => ['required', 'integer', 'distinct'],
         ], [
-            'user_id.required' => 'Pilih teknisi yang akan ditambahkan sebagai anggota.',
+            'technician_ids.required' => 'Pilih minimal satu teknisi yang akan ditambahkan.',
+            'technician_ids.min' => 'Pilih minimal satu teknisi yang akan ditambahkan.',
+            'technician_ids.*.distinct' => 'Teknisi yang sama tidak boleh dipilih lebih dari sekali.',
         ]);
 
-        $technician = User::where('role', User::ROLE_TEKNISI)->findOrFail($validated['user_id']);
+        $technicianIds = array_map('intval', $validated['technician_ids']);
 
-        PadalAnggota::updateOrCreate(
-            ['padal_id' => $padal->id, 'user_id' => $technician->id],
-            ['tanggal_bergabung' => now()]
-        );
+        DB::transaction(function () use ($padal, $technicianIds) {
+            Padal::whereKey($padal->id)->lockForUpdate()->firstOrFail();
 
-        return back()->with('success', 'Teknisi ' . $technician->name . ' berhasil ditambahkan sebagai anggota tim ' . $padal->nama_padal . '.');
+            $technicians = $this->eligibleTechnicians()
+                ->whereIn('id', $technicianIds)
+                ->get();
+
+            if ($technicians->count() !== count(array_unique($technicianIds))) {
+                throw ValidationException::withMessages([
+                    'technician_ids' => 'Pilih hanya akun Teknisi yang aktif dan memenuhi syarat.',
+                ]);
+            }
+
+            $alreadyMembers = $padal->members()
+                ->whereIn('users.id', $technicianIds)
+                ->pluck('users.id')
+                ->all();
+
+            if ($alreadyMembers !== []) {
+                throw ValidationException::withMessages([
+                    'technician_ids' => 'Satu atau beberapa teknisi sudah menjadi anggota tim Padal ini.',
+                ]);
+            }
+
+            foreach ($technicians as $technician) {
+                PadalAnggota::create([
+                    'padal_id' => $padal->id,
+                    'user_id' => $technician->id,
+                    'tanggal_bergabung' => now(),
+                ]);
+            }
+        });
+
+        return back()->with('success', 'Teknisi berhasil ditambahkan sebagai anggota tim ' . $padal->nama_padal . '.');
     }
 
     public function removeMember($userId)
     {
         $padal = $this->getCurrentPadal();
-        $technician = User::findOrFail($userId);
+        $technician = $padal->members()
+            ->where('users.role', User::ROLE_TEKNISI)
+            ->whereKey($userId)
+            ->firstOrFail();
 
         PadalAnggota::where('padal_id', $padal->id)->where('user_id', $userId)->delete();
 
         return back()->with('success', 'Teknisi ' . $technician->name . ' berhasil dikeluarkan dari tim ' . $padal->nama_padal . '.');
+    }
+
+    public function updateTicketTechnicians(Request $request, int $id)
+    {
+        $padal = $this->getCurrentPadal();
+        $ticket = Ticket::where('padal_id', $padal->id)->findOrFail($id);
+
+        if ($ticket->status !== Ticket::STATUS_DALAM_PENANGANAN) {
+            return back()->with('error', 'Teknisi hanya dapat diperbarui untuk tiket yang sedang dalam penanganan.');
+        }
+
+        $validated = $request->validate([
+            'technician_ids' => ['nullable', 'array'],
+            'technician_ids.*' => ['required', 'integer', 'distinct'],
+        ]);
+
+        $technicianIds = array_map('intval', $validated['technician_ids'] ?? []);
+
+        DB::transaction(function () use ($padal, $ticket, $technicianIds) {
+            $ticket = Ticket::whereKey($ticket->id)->lockForUpdate()->firstOrFail();
+            if ($ticket->status !== Ticket::STATUS_DALAM_PENANGANAN) {
+                throw ValidationException::withMessages([
+                    'technician_ids' => 'Status tiket berubah. Muat ulang halaman sebelum memperbarui teknisi.',
+                ]);
+            }
+
+            $eligibleIds = $padal->members()
+                ->where('users.role', User::ROLE_TEKNISI)
+                ->where('users.is_active', true)
+                ->where('users.approval_status', User::APPROVAL_ACTIVE)
+                ->where(function ($query) {
+                    $query->where('users.requires_email_verification', false)
+                        ->orWhereNotNull('users.email_verified_at');
+                })
+                ->whereIn('users.id', $technicianIds)
+                ->pluck('users.id')
+                ->map(fn ($technicianId) => (int) $technicianId)
+                ->all();
+
+            if (count($eligibleIds) !== count(array_unique($technicianIds))) {
+                throw ValidationException::withMessages([
+                    'technician_ids' => 'Pilih hanya teknisi aktif yang sudah menjadi anggota tim Padal Anda.',
+                ]);
+            }
+
+            $this->updateTicketTechnicianAssignments($ticket, $technicianIds);
+        });
+
+        return back()->with('success', 'Penugasan Teknisi pada tiket berhasil diperbarui. Riwayat penugasan sebelumnya tetap tersimpan.');
+    }
+
+    private function eligibleTechnicians(): Builder
+    {
+        return User::query()
+            ->where('role', User::ROLE_TEKNISI)
+            ->where('is_active', true)
+            ->where('approval_status', User::APPROVAL_ACTIVE)
+            ->where(function ($query) {
+                $query->where('requires_email_verification', false)
+                    ->orWhereNotNull('email_verified_at');
+            });
+    }
+
+    private function updateTicketTechnicianAssignments(Ticket $ticket, array $technicianIds): void
+    {
+        $activeAssignments = TicketTechnicianAssignment::query()
+            ->where('ticket_id', $ticket->id)
+            ->whereNull('released_at');
+        $currentIds = (clone $activeAssignments)->pluck('user_id')->map(fn ($id) => (int) $id)->all();
+        $toRelease = array_diff($currentIds, $technicianIds);
+
+        if ($toRelease !== []) {
+            TicketTechnicianAssignment::where('ticket_id', $ticket->id)
+                ->whereNull('released_at')
+                ->whereIn('user_id', $toRelease)
+                ->update(['released_at' => now()]);
+        }
+
+        foreach (array_diff($technicianIds, $currentIds) as $technicianId) {
+            TicketTechnicianAssignment::create([
+                'ticket_id' => $ticket->id,
+                'user_id' => $technicianId,
+                'assigned_by' => Auth::id(),
+                'assigned_at' => now(),
+            ]);
+        }
     }
 
     /**

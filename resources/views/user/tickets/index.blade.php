@@ -94,7 +94,7 @@
                             <td><small class="text-secondary">{{ $ticket->location }}</small></td>
                             <td>
                                 @if($ticket->padal)
-                                    <div class="small fw-semibold text-dark"><i class="bi bi-person-badge text-warning me-1"></i> {{ $ticket->padal->name }}</div>
+                                    <div class="small fw-semibold text-dark"><i class="bi bi-person-badge text-warning me-1"></i> {{ $ticket->padal->nama_padal }}</div>
                                 @else
                                     <small class="text-muted fst-italic">Belum ditugaskan</small>
                                 @endif
@@ -108,6 +108,8 @@
                                     <a href="{{ route('user.tickets.show', $ticket->id) }}" class="btn btn-sm btn-warning text-dark fw-bold">
                                         <i class="bi bi-star me-1"></i> Beri Rating
                                     </a>
+                                @elseif($ticket->rating)
+                                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Rating Diberikan ({{ $ticket->rating->rating }}/5)</span>
                                 @else
                                     <a href="{{ route('user.tickets.show', $ticket->id) }}" class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-eye me-1"></i> Detail

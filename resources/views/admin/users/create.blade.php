@@ -2,7 +2,7 @@
 
 @section('title', 'Tambah Pengguna Baru')
 @section('page_title', 'Tambah Pengguna Baru')
-@section('page_subtitle', 'Pendaftaran akun dengan penentuan role hak akses')
+@section('page_subtitle', 'Buat akun Padal atau Teknisi dan kirim undangan aktivasi')
 
 @section('content')
 <div class="row justify-content-center">
@@ -40,10 +40,8 @@
                             <label for="role" class="form-label fw-semibold small text-secondary">Peran Akun (Role) <span class="text-danger">*</span></label>
                             <select name="role" id="role" class="form-select @error('role') is-invalid @enderror" required>
                                 <option value="">-- Pilih Role --</option>
-                                <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin (Administrator TIK)</option>
                                 <option value="padal" {{ old('role') == 'padal' ? 'selected' : '' }}>Padal (Perwira Pengendali)</option>
                                 <option value="teknisi" {{ old('role') == 'teknisi' ? 'selected' : '' }}>Teknisi (Read-Only)</option>
-                                <option value="user" {{ old('role') == 'user' ? 'selected' : '' }}>User (Pelapor)</option>
                             </select>
                             @error('role')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -88,13 +86,8 @@
                         @enderror
                     </div>
 
-                    <div class="mb-4">
-                        <label for="password" class="form-label fw-semibold small text-secondary">Kata Sandi Awal <span class="text-danger">*</span></label>
-                        <input type="password" name="password" id="password" class="form-control @error('password') is-invalid @enderror" 
-                               placeholder="Minimal 6 karakter" required>
-                        @error('password')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                    <div class="alert alert-info small mb-4">
+                        Akun dibuat nonaktif. Pengguna akan menerima tautan aman untuk mengatur kata sandi dan mengaktifkan akunnya.
                     </div>
 
                     <div class="d-flex justify-content-end gap-2">

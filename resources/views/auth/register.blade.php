@@ -4,12 +4,26 @@
 
 @section('content')
 <div class="mb-4 text-center">
-    <h4 class="fw-bold text-dark mb-1">Pendaftaran Pelapor</h4>
-    <p class="text-muted small">Khusus personil / satker di lingkungan POLDA untuk pelaporan gangguan IT</p>
+    <h4 class="fw-bold text-dark mb-1">Pendaftaran Akun</h4>
+    <p class="text-muted small">Daftar sebagai User/Pelapor untuk membuat laporan layanan IT</p>
 </div>
+
+@if(session('error'))
+    <div class="alert alert-warning small" role="alert">
+        <i class="bi bi-shield-lock-fill me-1"></i>{{ session('error') }}
+    </div>
+@endif
+
+@if($errors->has('role'))
+    <div class="alert alert-warning small" role="alert">{{ $errors->first('role') }}</div>
+@endif
 
 <form action="{{ route('register.post') }}" method="POST">
     @csrf
+
+    <div class="alert alert-light border small" id="role-information">
+        Akun Padal dan Teknisi dikelola oleh Admin.
+    </div>
 
     <div class="mb-3">
         <label for="name" class="form-label small fw-semibold text-secondary">Nama Lengkap & Gelar</label>
@@ -88,7 +102,7 @@
         </div>
     </div>
 
-    <button type="submit" class="btn btn-police w-100 mb-3 shadow-sm">
+    <button type="submit" class="btn btn-police w-100 mb-3 shadow-sm" id="register-button">
         <i class="bi bi-person-plus-fill me-2"></i> Daftar Sebagai Pelapor
     </button>
 </form>

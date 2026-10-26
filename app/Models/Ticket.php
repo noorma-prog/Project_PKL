@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Ticket extends Model
 {
@@ -125,6 +126,19 @@ class Ticket extends Model
     public function padal(): BelongsTo
     {
         return $this->belongsTo(Padal::class, 'padal_id');
+    }
+
+    public function technicians(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'ticket_technician_assignments', 'ticket_id', 'user_id')
+            ->withPivot('assigned_by', 'assigned_at', 'released_at')
+            ->withTimestamps()
+            ->wherePivotNull('released_at');
+    }
+
+    public function technicianAssignments(): HasMany
+    {
+        return $this->hasMany(TicketTechnicianAssignment::class);
     }
 
     /**

@@ -12,11 +12,26 @@
     @csrf
 
     <div class="mb-3">
+        <label for="account_type" class="form-label small fw-semibold text-secondary">Pilih Jenis Akun</label>
+        <select name="account_type" id="account_type" class="form-select @error('account_type') is-invalid @enderror" required>
+            <option value="" selected disabled>Pilih jenis akun</option>
+            <option value="admin" {{ old('account_type') === 'admin' ? 'selected' : '' }}>Admin</option>
+            <option value="padal" {{ old('account_type') === 'padal' ? 'selected' : '' }}>Padal</option>
+            <option value="teknisi" {{ old('account_type') === 'teknisi' ? 'selected' : '' }}>Teknisi</option>
+            <option value="user" {{ old('account_type') === 'user' ? 'selected' : '' }}>User/Pelapor</option>
+        </select>
+        <div class="form-text small">Pilihan ini hanya untuk memilih jenis akses; hak akses tetap diverifikasi dari database.</div>
+        @error('account_type')
+            <div class="text-danger small mt-1">{{ $message }}</div>
+        @enderror
+    </div>
+
+    <div class="mb-3">
         <label for="email" class="form-label small fw-semibold text-secondary">Alamat Email Dinas</label>
         <div class="input-group">
             <span class="input-group-text bg-light border-end-0 text-secondary"><i class="bi bi-envelope"></i></span>
             <input type="email" name="email" id="email" class="form-control border-start-0 @error('email') is-invalid @enderror" 
-                   value="{{ old('email') }}" placeholder="contoh: nama@polda.go.id" required autofocus>
+                   value="" placeholder="contoh: nama@polda.go.id" autocomplete="off" required autofocus>
         </div>
         @error('email')
             <div class="text-danger small mt-1">{{ $message }}</div>
@@ -30,7 +45,7 @@
         <div class="input-group">
             <span class="input-group-text bg-light border-end-0 text-secondary"><i class="bi bi-lock"></i></span>
             <input type="password" name="password" id="password" class="form-control border-start-0 @error('password') is-invalid @enderror" 
-                   placeholder="Masukkan kata sandi" required>
+                   value="" placeholder="Masukkan kata sandi" autocomplete="off" required>
         </div>
         @error('password')
             <div class="text-danger small mt-1">{{ $message }}</div>
@@ -51,44 +66,10 @@
     </button>
 </form>
 
-<div class="text-center mb-4">
+<div class="text-center">
     <span class="text-muted small">Belum memiliki akun pelapor?</span>
     <a href="{{ route('register') }}" class="small fw-semibold text-primary text-decoration-none ms-1">
         Daftar Akun Baru
     </a>
 </div>
-
-<div class="p-3 bg-light rounded-3 border">
-    <div class="d-flex align-items-center justify-content-between mb-2">
-        <span class="small fw-bold text-dark"><i class="bi bi-lightning-charge-fill text-warning me-1"></i> Akun Pengujian Cepat:</span>
-        <span class="badge bg-secondary">Password: password</span>
-    </div>
-    <div class="d-grid gap-2">
-        <button type="button" class="demo-pill d-flex justify-content-between align-items-center" onclick="fillLogin('admin@polda.go.id', 'password')">
-            <span><strong>Admin:</strong> admin@polda.go.id</span>
-            <span class="badge bg-danger">Admin</span>
-        </button>
-        <button type="button" class="demo-pill d-flex justify-content-between align-items-center" onclick="fillLogin('padal@polda.go.id', 'password')">
-            <span><strong>Padal:</strong> padal@polda.go.id</span>
-            <span class="badge bg-warning text-dark">Padal</span>
-        </button>
-        <button type="button" class="demo-pill d-flex justify-content-between align-items-center" onclick="fillLogin('teknisi1@polda.go.id', 'password')">
-            <span><strong>Teknisi:</strong> teknisi1@polda.go.id</span>
-            <span class="badge bg-info text-dark">Teknisi</span>
-        </button>
-        <button type="button" class="demo-pill d-flex justify-content-between align-items-center" onclick="fillLogin('user@polda.go.id', 'password')">
-            <span><strong>Pelapor (User):</strong> user@polda.go.id</span>
-            <span class="badge bg-primary">User</span>
-        </button>
-    </div>
-</div>
-@endsection
-
-@section('scripts')
-<script>
-    function fillLogin(email, password) {
-        document.getElementById('email').value = email;
-        document.getElementById('password').value = password;
-    }
-</script>
 @endsection

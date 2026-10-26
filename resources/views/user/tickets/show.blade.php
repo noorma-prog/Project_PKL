@@ -123,7 +123,7 @@
     <div class="card bg-light border-0 shadow-sm mb-4">
         <div class="card-body p-4">
             <div class="d-flex align-items-center justify-content-between mb-2">
-                <span class="fw-bold text-dark"><i class="bi bi-patch-check-fill text-success me-2"></i> Penilaian Anda Terhadap Pelayanan Ini:</span>
+                <span class="fw-bold text-dark"><i class="bi bi-patch-check-fill text-success me-2"></i> Rating Diberikan — Penilaian Anda Terhadap Pelayanan Ini:</span>
                 <span class="text-muted small">{{ $ticket->rating->created_at->format('d M Y, H:i') }}</span>
             </div>
             <div class="text-warning fs-5 mb-2">

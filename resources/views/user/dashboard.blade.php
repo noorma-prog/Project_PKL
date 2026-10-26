@@ -140,6 +140,10 @@
                                     <a href="{{ route('user.tickets.show', $ticket->id) }}" class="btn btn-sm btn-warning text-dark fw-bold">
                                         <i class="bi bi-star me-1"></i> Beri Rating
                                     </a>
+                                @elseif($ticket->rating)
+                                    <a href="{{ route('user.tickets.show', $ticket->id) }}" class="btn btn-sm btn-outline-success">
+                                        <i class="bi bi-check-circle me-1"></i> Rating Diberikan
+                                    </a>
                                 @else
                                     <a href="{{ route('user.tickets.show', $ticket->id) }}" class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-eye me-1"></i> Detail

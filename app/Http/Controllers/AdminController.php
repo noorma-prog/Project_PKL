@@ -7,12 +7,14 @@ use App\Models\Padal;
 use App\Models\Ticket;
 use App\Models\TicketRating;
 use App\Models\TicketStatusHistory;
+use App\Models\TicketTechnicianAssignment;
 use App\Models\User;
+use App\Services\AccountActivationSender;
+use App\Services\EmailVerificationSender;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules\Password;
+use Illuminate\Support\Str;
 
 class AdminController extends Controller
 {
@@ -21,20 +23,29 @@ class AdminController extends Controller
      */
     public function dashboard()
     {
+        $completedStatuses = [
+            Ticket::STATUS_SELESAI,
+            Ticket::STATUS_SELESAI_DINILAI,
+        ];
+
         $stats = [
             'total_tickets' => Ticket::count(),
             'menunggu_verifikasi' => Ticket::where('status', Ticket::STATUS_MENUNGGU_VERIFIKASI)->count(),
             'menunggu_konfirmasi_padal' => Ticket::where('status', Ticket::STATUS_MENUNGGU_KONFIRMASI_PADAL)->count(),
-            'dalam_penanganan' => Ticket::where('status', Ticket::STATUS_DALAM_PENANGANAN)->count(),
-            'selesai' => Ticket::whereIn('status', [Ticket::STATUS_SELESAI, Ticket::STATUS_SELESAI_DINILAI])->count(),
+            'dalam_penanganan' => Ticket::whereIn('status', [
+                Ticket::STATUS_MENUNGGU_KONFIRMASI_PADAL,
+                Ticket::STATUS_DALAM_PENANGANAN,
+            ])->count(),
+            'selesai' => Ticket::whereIn('status', $completedStatuses)->count(),
             'ditolak' => Ticket::whereIn('status', [Ticket::STATUS_DITOLAK_ADMIN, Ticket::STATUS_DITOLAK_PADAL])->count(),
             'total_users' => User::where('role', User::ROLE_USER)->count(),
             'total_padal' => Padal::count(),
             'total_teknisi' => User::where('role', User::ROLE_TEKNISI)->count(),
-            'avg_rating' => round((float) TicketRating::avg('rating'), 1) ?: 0,
+            'avg_rating' => number_format((float) TicketRating::avg('rating'), 1, '.', ''),
         ];
 
         // Laporan masuk yang membutuhkan verifikasi segera
+        $pendingVerificationCount = $stats['menunggu_verifikasi'];
         $pendingVerificationTickets = Ticket::with(['user', 'category'])
             ->where('status', Ticket::STATUS_MENUNGGU_VERIFIKASI)
             ->latest()
@@ -42,12 +53,17 @@ class AdminController extends Controller
             ->get();
 
         // Laporan terbaru
-        $recentTickets = Ticket::with(['user', 'category', 'padal.leader'])
+        $recentTickets = Ticket::with(['user', 'category', 'padal.leader', 'technicians'])
             ->latest()
             ->take(8)
             ->get();
 
-        return view('admin.dashboard', compact('stats', 'pendingVerificationTickets', 'recentTickets'));
+        return view('admin.dashboard', compact(
+            'stats',
+            'pendingVerificationCount',
+            'pendingVerificationTickets',
+            'recentTickets'
+        ));
     }
 
     /**
@@ -55,7 +71,7 @@ class AdminController extends Controller
      */
     public function tickets(Request $request)
     {
-        $query = Ticket::with(['user', 'category', 'padal.leader', 'rating']);
+        $query = Ticket::with(['user', 'category', 'padal.leader', 'technicians', 'rating']);
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -92,7 +108,7 @@ class AdminController extends Controller
     /**
      * Detail tiket untuk Admin (Use Case: Memeriksa Laporan -> Lihat Detail Laporan & Lihat Riwayat Status)
      */
-    public function showTicket($id)
+    public function showTicket(int $id)
     {
         $ticket = Ticket::with([
             'user', 
@@ -101,6 +117,7 @@ class AdminController extends Controller
             'ditugaskanOleh', 
             'padal.leader', 
             'padal.members', 
+            'technicians',
             'rating', 
             'histories.user'
         ])->findOrFail($id);
@@ -113,7 +130,7 @@ class AdminController extends Controller
     /**
      * Konfirmasi Laporan & Pilih Padal (Use Case: Memeriksa Laporan -> Konfirmasi Laporan & Menugaskan Padal -> Pilih Padal)
      */
-    public function verifyAndAssign(Request $request, $id)
+    public function verifyAndAssign(Request $request, int $id)
     {
         $ticket = Ticket::findOrFail($id);
 
@@ -160,7 +177,7 @@ class AdminController extends Controller
     /**
      * Ubah Penugasan Padal (Use Case: Menugaskan Padal -> Ubah Penugasan)
      */
-    public function reassignTicket(Request $request, $id)
+    public function reassignTicket(Request $request, int $id)
     {
         $ticket = Ticket::findOrFail($id);
 
@@ -174,8 +191,15 @@ class AdminController extends Controller
         $padal = Padal::with('leader')->findOrFail($validated['padal_id']);
 
         return DB::transaction(function () use ($ticket, $padal, $validated) {
+            $ticket = Ticket::whereKey($ticket->id)->lockForUpdate()->firstOrFail();
             $oldStatus = $ticket->status;
             $oldPadalName = $ticket->padal ? $ticket->padal->nama_padal : 'Padal Sebelumnya';
+
+            if ((int) $ticket->padal_id !== (int) $padal->id) {
+                TicketTechnicianAssignment::where('ticket_id', $ticket->id)
+                    ->whereNull('released_at')
+                    ->update(['released_at' => now()]);
+            }
 
             $ticket->status = Ticket::STATUS_MENUNGGU_KONFIRMASI_PADAL;
             $ticket->ditugaskan_oleh = Auth::id();
@@ -201,7 +225,7 @@ class AdminController extends Controller
     /**
      * Tolak Laporan Masuk (Use Case: Memeriksa Laporan -> Tolak Laporan)
      */
-    public function rejectTicket(Request $request, $id)
+    public function rejectTicket(Request $request, int $id)
     {
         $ticket = Ticket::findOrFail($id);
 
@@ -249,6 +273,10 @@ class AdminController extends Controller
             $query->where('role', $request->role);
         }
 
+        if ($request->filled('approval_status')) {
+            $query->where('approval_status', $request->approval_status);
+        }
+
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -261,8 +289,11 @@ class AdminController extends Controller
         }
 
         $users = $query->latest()->paginate(10)->withQueryString();
+        $activeAdminCount = User::where('role', User::ROLE_ADMIN)
+            ->where('is_active', true)
+            ->count();
 
-        return view('admin.users.index', compact('users'));
+        return view('admin.users.index', compact('users', 'activeAdminCount'));
     }
 
     public function createUser()
@@ -275,24 +306,22 @@ class AdminController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'role' => ['required', 'in:user,admin,padal,teknisi'],
+            'role' => ['required', 'in:padal,teknisi'],
             'nrp_nip' => ['required', 'string', 'max:50'],
             'satuan_kerja' => ['required', 'string', 'max:100'],
             'phone_number' => ['nullable', 'string', 'max:20'],
             'alamat' => ['nullable', 'string', 'max:255'],
-            'password' => ['required', Password::min(6)],
         ], [
             'name.required' => 'Nama lengkap wajib diisi.',
             'email.required' => 'Alamat email wajib diisi.',
             'email.unique' => 'Email tersebut sudah terdaftar.',
-            'role.required' => 'Pilih role pengguna.',
+            'role.required' => 'Pilih role Padal atau Teknisi.',
+            'role.in' => 'Admin hanya dapat membuat akun Padal atau Teknisi.',
             'nrp_nip.required' => 'NRP atau NIP wajib diisi.',
             'satuan_kerja.required' => 'Satuan Kerja / Bagian wajib diisi.',
-            'password.required' => 'Kata sandi wajib diisi.',
-            'password.min' => 'Kata sandi minimal 6 karakter.',
         ]);
 
-        User::create([
+        $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'role' => $validated['role'],
@@ -300,38 +329,62 @@ class AdminController extends Controller
             'satuan_kerja' => $validated['satuan_kerja'],
             'phone_number' => $validated['phone_number'] ?? null,
             'alamat' => $validated['alamat'] ?? null,
-            'password' => Hash::make($validated['password']),
-            'is_active' => true,
+            'password' => Str::random(64),
+            'email_verified_at' => null,
+            'is_active' => false,
+            'approval_status' => User::APPROVAL_ACTIVE,
+            'requires_email_verification' => true,
         ]);
 
-        return redirect()->route('admin.users.index')->with('success', 'Pengguna baru berhasil ditambahkan.');
+        if (!app(AccountActivationSender::class)->send($user)) {
+            return redirect()->route('admin.users.index')->with(
+                'error',
+                'Akun berhasil dibuat dalam status menunggu aktivasi, tetapi undangan email belum dapat dikirim. Periksa konfigurasi email lalu kirim ulang undangan.'
+            );
+        }
+
+        return redirect()->route('admin.users.index')->with(
+            'success',
+            'Akun berhasil dibuat. Undangan untuk mengatur kata sandi telah dikirim ke email pengguna.'
+        );
     }
 
-    public function showUser($id)
+    public function showUser(int $id)
     {
         $user = User::withCount(['tickets', 'padalTeams'])->findOrFail($id);
         return view('admin.users.show', compact('user'));
     }
 
-    public function editUser($id)
+    public function editUser(int $id)
     {
         $user = User::findOrFail($id);
+
+        if ($user->role === User::ROLE_ADMIN) {
+            return redirect()->route('admin.users.index')->with(
+                'error',
+                'Akun Admin tidak dapat diubah melalui Manajemen Pengguna.'
+            );
+        }
+
         return view('admin.users.edit', compact('user'));
     }
 
-    public function updateUser(Request $request, $id)
+    public function updateUser(Request $request, int $id)
     {
         $user = User::findOrFail($id);
+
+        if ($user->role === User::ROLE_ADMIN) {
+            return back()->with('error', 'Akun Admin tidak dapat diubah melalui Manajemen Pengguna.');
+        }
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
-            'role' => ['required', 'in:user,admin,padal,teknisi'],
+            'role' => ['required', 'in:user,padal,teknisi'],
             'nrp_nip' => ['required', 'string', 'max:50'],
             'satuan_kerja' => ['required', 'string', 'max:100'],
             'phone_number' => ['nullable', 'string', 'max:20'],
             'alamat' => ['nullable', 'string', 'max:255'],
-            'password' => ['nullable', Password::min(6)],
             'is_active' => ['required', 'boolean'],
         ]);
 
@@ -339,27 +392,179 @@ class AdminController extends Controller
             return back()->with('error', 'Anda tidak dapat menonaktifkan akun Anda sendiri.');
         }
 
+        if ($user->id === Auth::id() && $validated['role'] !== $user->role) {
+            return back()->with('error', 'Anda tidak dapat mengubah role akun Anda sendiri.');
+        }
+
+        $removingLastActiveAdmin = $user->role === User::ROLE_ADMIN
+            && $user->is_active
+            && ($validated['role'] !== User::ROLE_ADMIN || !$validated['is_active'])
+            && User::where('role', User::ROLE_ADMIN)->where('is_active', true)->count() <= 1;
+
+        if ($removingLastActiveAdmin) {
+            return back()->with('error', 'Admin aktif terakhir tidak dapat dinonaktifkan atau diubah rolenya.');
+        }
+
+        $emailChanged = $user->email !== $validated['email'];
+        $isStaffAccount = in_array($validated['role'], [User::ROLE_PADAL, User::ROLE_TEKNISI], true);
+
+        if ($isStaffAccount
+            && !$user->is_active
+            && (bool) $validated['is_active']
+            && (!$user->hasVerifiedEmail() || !$user->isApprovalActive())) {
+            return back()->with(
+                'error',
+                'Akun Padal/Teknisi harus menyelesaikan aktivasi email sebelum dapat diaktifkan.'
+            );
+        }
+
         $user->name = $validated['name'];
         $user->email = $validated['email'];
+        if ($emailChanged) {
+            $user->email_verified_at = null;
+            $user->requires_email_verification = true;
+        }
+
+        if (in_array($validated['role'], [User::ROLE_PADAL, User::ROLE_TEKNISI], true)) {
+            if ($user->role !== $validated['role']) {
+                $user->approval_status = User::APPROVAL_ACTIVE;
+            }
+        } else {
+            $user->approval_status = User::APPROVAL_ACTIVE;
+        }
+
+        $user->is_active = (bool) $validated['is_active'];
+
         $user->role = $validated['role'];
         $user->nrp_nip = $validated['nrp_nip'];
         $user->satuan_kerja = $validated['satuan_kerja'];
         $user->phone_number = $validated['phone_number'] ?? null;
         $user->alamat = $validated['alamat'] ?? null;
-        $user->is_active = (bool) $validated['is_active'];
-
-        if ($request->filled('password')) {
-            $user->password = Hash::make($validated['password']);
-        }
 
         $user->save();
 
-        return redirect()->route('admin.users.index')->with('success', 'Data pengguna berhasil diperbarui.');
+        if ($emailChanged && $isStaffAccount && !$user->is_active) {
+            if (!app(AccountActivationSender::class)->send($user)) {
+                return redirect()->route('admin.users.index')->with(
+                    'error',
+                    'Data akun diperbarui, tetapi undangan aktivasi belum dapat dikirim. Silakan kirim ulang undangan setelah email diperiksa.'
+                );
+            }
+        } elseif ($emailChanged) {
+            if (!app(EmailVerificationSender::class)->send($user)) {
+                return redirect()->route('admin.users.index')->with(
+                    'error',
+                    'Data pengguna diperbarui, tetapi email verifikasi belum dapat dikirim. Silakan kirim ulang setelah konfigurasi email diperiksa.'
+                );
+            }
+        }
+
+        return redirect()->route('admin.users.index')->with(
+            'success',
+            $emailChanged
+                ? 'Data pengguna diperbarui. Email baru harus menjalani verifikasi ulang.'
+                : 'Data pengguna berhasil diperbarui.'
+        );
     }
 
-    public function destroyUser($id)
+    public function sendActivationInvitation(int $id)
     {
         $user = User::findOrFail($id);
+
+        if (!in_array($user->role, [User::ROLE_PADAL, User::ROLE_TEKNISI], true)
+            || $user->is_active
+            || !$user->requiresEmailVerification()
+            || $user->hasVerifiedEmail()
+            || !$user->isApprovalActive()) {
+            return back()->with(
+                'error',
+                'Undangan aktivasi hanya dapat dikirim untuk akun Padal/Teknisi yang masih menunggu aktivasi.'
+            );
+        }
+
+        if (!app(AccountActivationSender::class)->send($user)) {
+            return back()->with(
+                'error',
+                'Undangan aktivasi belum dapat dikirim. Periksa konfigurasi email dan coba lagi.'
+            );
+        }
+
+        return back()->with('success', 'Undangan aktivasi berhasil dikirim ulang.');
+    }
+
+    public function approveUser(int $id)
+    {
+        $user = User::findOrFail($id);
+
+        if (!in_array($user->role, [User::ROLE_PADAL, User::ROLE_TEKNISI], true)) {
+            return back()->with('error', 'Hanya akun Padal atau Teknisi yang dapat diproses persetujuannya.');
+        }
+
+        if (!$user->hasVerifiedEmail()) {
+            return back()->with('error', 'Akun belum dapat disetujui sampai alamat email diverifikasi.');
+        }
+
+        $user->approval_status = User::APPROVAL_ACTIVE;
+        $user->is_active = true;
+        $user->save();
+
+        return back()->with('success', 'Pendaftaran akun berhasil disetujui.');
+    }
+
+    public function rejectUser(int $id)
+    {
+        $user = User::findOrFail($id);
+
+        if (!in_array($user->role, [User::ROLE_PADAL, User::ROLE_TEKNISI], true)) {
+            return back()->with('error', 'Hanya akun Padal atau Teknisi yang dapat ditolak pendaftarannya.');
+        }
+
+        $user->approval_status = User::APPROVAL_REJECTED;
+        $user->is_active = false;
+        $user->save();
+
+        return back()->with('success', 'Pendaftaran akun berhasil ditolak dan akun dinonaktifkan.');
+    }
+
+    public function toggleUserStatus(int $id)
+    {
+        $user = User::findOrFail($id);
+
+        if ($user->role === User::ROLE_ADMIN) {
+            return back()->with('error', 'Status akun Admin tidak dapat diubah melalui Manajemen Pengguna.');
+        }
+
+        if ($user->id === Auth::id()) {
+            return back()->with('error', 'Anda tidak dapat mengubah status akun Anda sendiri.');
+        }
+
+        if (!$user->is_active
+            && in_array($user->role, [User::ROLE_PADAL, User::ROLE_TEKNISI], true)
+            && (!$user->hasVerifiedEmail() || !$user->isApprovalActive())) {
+            return back()->with(
+                'error',
+                'Akun Padal/Teknisi harus menyelesaikan aktivasi email sebelum dapat diaktifkan.'
+            );
+        }
+
+        $user->is_active = !$user->is_active;
+        $user->save();
+
+        return back()->with(
+            'success',
+            $user->is_active
+                ? 'Akun pengguna berhasil diaktifkan kembali.'
+                : 'Akun pengguna berhasil dinonaktifkan.'
+        );
+    }
+
+    public function destroyUser(int $id)
+    {
+        $user = User::findOrFail($id);
+
+        if ($user->role === User::ROLE_ADMIN) {
+            return back()->with('error', 'Akun Admin tidak dapat dihapus melalui Manajemen Pengguna.');
+        }
 
         if ($user->id === Auth::id()) {
             return back()->with('error', 'Anda tidak dapat menghapus akun Anda sendiri.');
@@ -367,6 +572,14 @@ class AdminController extends Controller
 
         if ($user->tickets()->exists()) {
             return back()->with('error', 'Akun tidak dapat dihapus karena memiliki riwayat laporan tiket.');
+        }
+
+        if ($user->ticketTechnicianAssignments()->exists()) {
+            return back()->with('error', 'Akun Teknisi tidak dapat dihapus karena masih memiliki riwayat penugasan tiket.');
+        }
+
+        if ($user->padalTeams()->exists()) {
+            return back()->with('error', 'Akun tidak dapat dihapus karena masih tercatat sebagai anggota unit Padal.');
         }
 
         $user->delete();
@@ -404,7 +617,7 @@ class AdminController extends Controller
         return back()->with('success', 'Kategori permasalahan berhasil ditambahkan.');
     }
 
-    public function updateCategory(Request $request, $id)
+    public function updateCategory(Request $request, int $id)
     {
         $category = Category::findOrFail($id);
 
@@ -425,7 +638,7 @@ class AdminController extends Controller
         return back()->with('success', 'Kategori berhasil diperbarui.');
     }
 
-    public function destroyCategory($id)
+    public function destroyCategory(int $id)
     {
         $category = Category::findOrFail($id);
 
@@ -476,7 +689,7 @@ class AdminController extends Controller
         return back()->with('success', 'Unit Padal baru berhasil ditambahkan.');
     }
 
-    public function updatePadal(Request $request, $id)
+    public function updatePadal(Request $request, int $id)
     {
         $padal = Padal::findOrFail($id);
 
@@ -496,12 +709,12 @@ class AdminController extends Controller
         return back()->with('success', 'Data unit Padal berhasil diperbarui.');
     }
 
-    public function destroyPadal($id)
+    public function destroyPadal(int $id)
     {
         $padal = Padal::findOrFail($id);
 
-        if ($padal->tickets()->whereIn('status', [Ticket::STATUS_MENUNGGU_KONFIRMASI_PADAL, Ticket::STATUS_DALAM_PENANGANAN])->exists()) {
-            return back()->with('error', 'Unit Padal tidak dapat dihapus karena masih menangani tiket yang aktif.');
+        if ($padal->tickets()->exists() || $padal->ratings()->exists()) {
+            return back()->with('error', 'Unit Padal tidak dapat dihapus karena masih memiliki riwayat tiket atau penilaian. Nonaktifkan unit jika tidak digunakan lagi.');
         }
 
         $padal->delete();
@@ -523,9 +736,12 @@ class AdminController extends Controller
             $query->where('rating', $request->rating);
         }
 
-        $ratings = $query->latest()->paginate(10)->withQueryString();
-        $padals = Padal::all();
-        $avgRating = round((float) TicketRating::avg('rating'), 2);
+        $avgRating = round((float) (clone $query)->avg('rating'), 2);
+        $ratings = $query->with(['ticket', 'user', 'padal.leader'])->latest()->paginate(10)->withQueryString();
+        $padals = Padal::withCount('ratings')
+            ->withAvg('ratings', 'rating')
+            ->orderBy('nama_padal')
+            ->get();
 
         return view('admin.ratings.index', compact('ratings', 'padals', 'avgRating'));
     }

@@ -40,7 +40,6 @@
                         <div class="col-md-6">
                             <label for="role" class="form-label fw-semibold small text-secondary">Peran Akun (Role) <span class="text-danger">*</span></label>
                             <select name="role" id="role" class="form-select @error('role') is-invalid @enderror" required>
-                                <option value="admin" {{ old('role', $user->role) == 'admin' ? 'selected' : '' }}>Admin (Administrator TIK)</option>
                                 <option value="padal" {{ old('role', $user->role) == 'padal' ? 'selected' : '' }}>Padal (Perwira Pengendali)</option>
                                 <option value="teknisi" {{ old('role', $user->role) == 'teknisi' ? 'selected' : '' }}>Teknisi (Read-Only)</option>
                                 <option value="user" {{ old('role', $user->role) == 'user' ? 'selected' : '' }}>User (Pelapor)</option>
@@ -89,20 +88,6 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                    </div>
-
-                    <hr class="my-4">
-
-                    <h6 class="fw-bold text-dark mb-2"><i class="bi bi-key text-warning me-2"></i> Reset Kata Sandi (Opsional)</h6>
-                    <p class="small text-muted mb-3">Biarkan kosong jika tidak ingin mengubah kata sandi pengguna.</p>
-
-                    <div class="mb-4">
-                        <label for="password" class="form-label fw-semibold small text-secondary">Kata Sandi Baru</label>
-                        <input type="password" name="password" id="password" class="form-control @error('password') is-invalid @enderror" 
-                               placeholder="Minimal 6 karakter baru">
-                        @error('password')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
                     </div>
 
                     <div class="d-flex justify-content-end gap-2">

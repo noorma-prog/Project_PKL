@@ -301,6 +301,21 @@
                     </div>
                 @endif
 
+                @if($ticket->technicians->isNotEmpty())
+                    <hr class="my-2">
+                    <div>
+                        <small class="text-muted d-block mb-1">Teknisi yang Ditugaskan pada Tiket Ini:</small>
+                        <ul class="list-unstyled mb-0">
+                            @foreach($ticket->technicians as $technician)
+                                <li class="small fw-semibold text-dark">
+                                    <i class="bi bi-tools text-info me-1"></i>{{ $technician->name }}
+                                    <span class="text-muted">({{ $technician->nrp_nip ?? 'Teknisi' }})</span>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
                 @if($ticket->diperiksaOleh || $ticket->ditugaskanOleh)
                     <hr class="my-2">
                     <div class="small text-muted">

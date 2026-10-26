@@ -35,7 +35,7 @@ class UserTicketController extends Controller
         ];
 
         $recentTickets = $user->tickets()
-            ->with(['category', 'padal'])
+            ->with(['category', 'padal', 'rating'])
             ->latest()
             ->take(5)
             ->get();
@@ -131,6 +131,14 @@ class UserTicketController extends Controller
         ]);
 
         return DB::transaction(function () use ($request, $validated, $user) {
+            $user = $user->newQuery()->whereKey($user->id)->lockForUpdate()->firstOrFail();
+            if ($user->hasUnratedCompletedTickets()) {
+                return redirect()->route('user.tickets.index')->with(
+                    'error',
+                    'Pembuatan laporan ditolak. Anda masih mempunyai laporan selesai yang belum diberi rating dan ulasan.'
+                );
+            }
+
             // Generate nomor tiket unik: TKT-YYYYMMDD-XXXX
             $datePrefix = 'TKT-' . date('Ymd') . '-';
             do {
@@ -189,18 +197,6 @@ class UserTicketController extends Controller
     {
         $user = Auth::user();
 
-        $ticket = Ticket::where('user_id', $user->id)->findOrFail($id);
-
-        // Aturan: Rating hanya boleh diberikan jika tiket telah selesai
-        if ($ticket->status !== Ticket::STATUS_SELESAI) {
-            return back()->with('error', 'Rating hanya dapat diberikan untuk laporan yang telah berstatus Selesai.');
-        }
-
-        // Aturan: Cegah pemberian rating ganda
-        if ($ticket->rating()->exists()) {
-            return back()->with('error', 'Anda sudah memberikan penilaian untuk laporan ini.');
-        }
-
         $validated = $request->validate([
             'rating' => ['required', 'integer', 'between:1,5'],
             'review' => ['nullable', 'string', 'max:1000'],
@@ -210,7 +206,24 @@ class UserTicketController extends Controller
             'review.max' => 'Ulasan maksimal 1000 karakter.',
         ]);
 
-        return DB::transaction(function () use ($ticket, $user, $validated) {
+        return DB::transaction(function () use ($id, $user, $validated) {
+            $ticket = Ticket::where('user_id', $user->id)
+                ->whereKey($id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($ticket->status !== Ticket::STATUS_SELESAI) {
+                return back()->with('error', 'Rating hanya dapat diberikan untuk laporan yang telah berstatus Selesai.');
+            }
+
+            if ($ticket->rating()->exists()) {
+                return back()->with('error', 'Anda sudah memberikan penilaian untuk laporan ini.');
+            }
+
+            if (!$ticket->padal_id) {
+                return back()->with('error', 'Rating tidak dapat dikirim karena tiket belum memiliki Padal penanggung jawab.');
+            }
+
             TicketRating::create([
                 'ticket_id' => $ticket->id,
                 'user_id' => $user->id,

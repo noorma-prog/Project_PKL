@@ -20,6 +20,13 @@ class TicketRating extends Model
         'review',      // komentar
     ];
 
+    protected function casts(): array
+    {
+        return [
+            'rating' => 'integer',
+        ];
+    }
+
     public function ticket(): BelongsTo
     {
         return $this->belongsTo(Ticket::class, 'ticket_id');

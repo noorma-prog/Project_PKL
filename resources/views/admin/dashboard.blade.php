@@ -105,7 +105,7 @@
 <div class="card shadow-sm border-0 mb-4">
     <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
         <div class="d-flex align-items-center gap-2">
-            <span class="badge bg-danger rounded-pill">{{ $pendingVerificationTickets->count() }}</span>
+            <span class="badge bg-danger rounded-pill">{{ $pendingVerificationCount }}</span>
             <h6 class="mb-0 fw-bold text-dark">Laporan Masuk Menunggu Verifikasi Administrator</h6>
         </div>
         <a href="{{ route('admin.tickets.index', ['status' => 'menunggu_verifikasi']) }}" class="small fw-semibold text-primary text-decoration-none">
@@ -131,7 +131,7 @@
                             <td class="ps-3 fw-bold text-primary font-monospace">{{ $ticket->ticket_number }}</td>
                             <td>
                                 <div class="fw-semibold text-dark">{{ $ticket->user->name }}</div>
-                                <small class="text-muted">{{ $ticket->user->satuan_kerja ?? 'Satker POLDA' }}</small>
+                                <small class="text-muted">{{ $ticket->user->satuan_kerja ?? $ticket->user->alamat ?? 'Satker POLDA' }}</small>
                             </td>
                             <td>
                                 <span class="badge bg-light text-dark border mb-1">{{ $ticket->category->name }}</span>
@@ -187,7 +187,7 @@
                             <td class="ps-3 fw-bold text-primary font-monospace">{{ $ticket->ticket_number }}</td>
                             <td>
                                 <div class="fw-semibold text-dark">{{ $ticket->user->name }}</div>
-                                <small class="text-muted">{{ $ticket->user->satuan_kerja }}</small>
+                                <small class="text-muted">{{ $ticket->user->satuan_kerja ?? $ticket->user->alamat ?? 'Satker POLDA' }}</small>
                             </td>
                             <td>
                                 <span class="badge bg-light text-dark border mb-1">{{ $ticket->category->name }}</span>
@@ -195,7 +195,7 @@
                             </td>
                             <td>
                                 @if($ticket->padal)
-                                    <small class="fw-semibold text-dark">{{ $ticket->padal->name }}</small>
+                                    <small class="fw-semibold text-dark">{{ $ticket->padal->nama_padal }}</small>
                                 @else
                                     <small class="text-muted fst-italic">Belum ditugaskan</small>
                                 @endif
