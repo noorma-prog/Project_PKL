@@ -50,7 +50,9 @@ class TeknisiController extends Controller
                 $technicianQuery->where('users.id', $technician->id);
             });
 
-        if ($request->filled('status')) {
+        if ($request->input('status') === 'selesai_semua') {
+            $query->whereIn('status', [Ticket::STATUS_SELESAI, Ticket::STATUS_SELESAI_DINILAI]);
+        } elseif ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 

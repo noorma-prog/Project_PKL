@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
 class AuthController extends Controller
@@ -211,35 +212,64 @@ class AuthController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        $validated = $request->validate([
+        $emailChanged = $user->isAdmin() && $request->input('email') !== $user->email;
+        $currentPasswordRequired = $emailChanged || $request->filled('new_password');
+
+        $rules = [
             'name' => ['required', 'string', 'max:255'],
             'phone_number' => ['nullable', 'string', 'max:20'],
             'alamat' => ['nullable', 'string', 'max:255'],
             'satuan_kerja' => ['nullable', 'string', 'max:100'],
             'nrp_nip' => ['nullable', 'string', 'max:50'],
-            'current_password' => ['nullable', 'required_with:new_password'],
+            'current_password' => $currentPasswordRequired ? ['required', 'string'] : ['nullable', 'string'],
             'new_password' => ['nullable', Password::min(6), 'confirmed'],
-        ], [
+        ];
+
+        if ($user->isAdmin()) {
+            $rules['email'] = ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)];
+        } else {
+            $rules['email'] = ['prohibited'];
+        }
+
+        $validated = $request->validate($rules, [
             'name.required' => 'Nama lengkap wajib diisi.',
-            'current_password.required_with' => 'Masukkan kata sandi lama untuk mengubah kata sandi baru.',
+            'email.required' => 'Alamat email wajib diisi.',
+            'email.email' => 'Format alamat email tidak valid.',
+            'email.unique' => 'Alamat email tersebut sudah digunakan akun lain.',
+            'email.prohibited' => 'Alamat email tidak dapat diubah melalui profil akun ini.',
+            'current_password.required' => 'Masukkan kata sandi saat ini untuk mengubah email atau kata sandi.',
             'new_password.min' => 'Kata sandi baru minimal 6 karakter.',
             'new_password.confirmed' => 'Konfirmasi kata sandi baru tidak cocok.',
         ]);
 
-        // Cek ganti password jika diisi
+        if ($currentPasswordRequired && !Hash::check($validated['current_password'], $user->password)) {
+            return back()->withErrors(['current_password' => 'Kata sandi saat ini yang Anda masukkan salah.']);
+        }
+
         if ($request->filled('new_password')) {
-            if (!Hash::check($request->current_password, $user->password)) {
-                return back()->withErrors(['current_password' => 'Kata sandi lama yang Anda masukkan salah.']);
-            }
             $user->password = Hash::make($validated['new_password']);
         }
 
+        if ($emailChanged) {
+            $user->email = $validated['email'];
+            $user->email_verified_at = null;
+            $user->requires_email_verification = true;
+        }
+
         $user->name = $validated['name'];
-        $user->phone_number = $validated['phone_number'] ?? $user->phone_number;
-        $user->alamat = $validated['alamat'] ?? $user->alamat;
-        $user->satuan_kerja = $validated['satuan_kerja'] ?? $user->satuan_kerja;
-        $user->nrp_nip = $validated['nrp_nip'] ?? $user->nrp_nip;
+        $user->phone_number = array_key_exists('phone_number', $validated) ? $validated['phone_number'] : $user->phone_number;
+        $user->alamat = array_key_exists('alamat', $validated) ? $validated['alamat'] : $user->alamat;
+        $user->satuan_kerja = array_key_exists('satuan_kerja', $validated) ? $validated['satuan_kerja'] : $user->satuan_kerja;
+        $user->nrp_nip = array_key_exists('nrp_nip', $validated) ? $validated['nrp_nip'] : $user->nrp_nip;
         $user->save();
+
+        if ($emailChanged) {
+            if (!app(EmailVerificationSender::class)->send($user)) {
+                return back()->with('error', EmailVerificationSender::FAILURE_MESSAGE.' Email baru telah disimpan tetapi belum terverifikasi. Gunakan tombol kirim ulang verifikasi.');
+            }
+
+            return back()->with('success', 'Profil berhasil diperbarui. Tautan verifikasi telah dikirim ke alamat email baru; verifikasi sebelum menggunakan dashboard kembali.');
+        }
 
         return back()->with('success', 'Profil Anda berhasil diperbarui.');
     }

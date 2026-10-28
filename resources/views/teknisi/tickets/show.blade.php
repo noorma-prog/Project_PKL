@@ -162,9 +162,10 @@
             </div>
             <div class="card-body p-3">
                 @if($ticket->padal)
-                    <div class="fw-bold text-dark">{{ $ticket->padal->name }}</div>
-                    <small class="text-muted d-block">NRP: {{ $ticket->padal->nrp_nip ?? '-' }}</small>
-                    <small class="text-muted d-block">No. HP: {{ $ticket->padal->phone_number ?? '-' }}</small>
+                    <div class="fw-bold text-dark">{{ $ticket->padal->nama_padal }}</div>
+                    <small class="text-muted d-block">Ketua: {{ $ticket->padal->leader?->name ?? '-' }}</small>
+                    <small class="text-muted d-block">NRP: {{ $ticket->padal->leader?->nrp_nip ?? '-' }}</small>
+                    <small class="text-muted d-block">No. HP: {{ $ticket->padal->leader?->phone_number ?? '-' }}</small>
                 @else
                     <small class="text-muted">Belum ditetapkan</small>
                 @endif

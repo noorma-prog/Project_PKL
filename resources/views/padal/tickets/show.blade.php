@@ -57,45 +57,22 @@
         @if($ticket->status === \App\Models\Ticket::STATUS_MENUNGGU_KONFIRMASI_PADAL)
             <div class="card border-warning shadow-sm mb-4">
                 <div class="card-header bg-warning text-dark py-3">
-                    <h6 class="mb-0 fw-bold"><i class="bi bi-clipboard-check me-2"></i> Konfirmasi Penugasan & Pemilihan Anggota Teknisi</h6>
+                    <h6 class="mb-0 fw-bold"><i class="bi bi-clipboard-check me-2"></i> Konfirmasi Penugasan</h6>
                 </div>
                 <div class="card-body p-4">
                     <p class="text-secondary small mb-3">
-                        Laporan ini telah ditugaskan kepada Anda oleh Administrator TIK. Anda dapat <strong>menerima penugasan</strong> dengan memilih anggota teknisi yang bertugas, atau <strong>menolak</strong> jika terdapat kendala operasional dengan alasan yang jelas.
+                        Laporan ini telah ditugaskan kepada Anda oleh Administrator TIK. Terima penugasan terlebih dahulu untuk memulai penanganan, lalu tetapkan anggota Teknisi pada formulir berikutnya. Anda juga dapat menolak penugasan dengan alasan yang jelas.
                     </p>
 
                     <form action="{{ route('padal.tickets.accept', $ticket->id) }}" method="POST" class="mb-4">
                         @csrf
                         <div class="mb-3">
-                            <label class="form-label fw-bold text-dark">Pilih Anggota Tim Teknisi yang Bertugas <span class="text-danger">*</span></label>
-                            <div class="p-3 bg-light rounded border">
-                                @forelse($availableTechnicians as $tech)
-                                    <div class="form-check mb-2">
-                                        <input class="form-check-input" type="checkbox" name="technician_ids[]" value="{{ $tech->id }}" id="tech{{ $tech->id }}"
-                                               {{ (is_array(old('technician_ids')) && in_array($tech->id, old('technician_ids'))) ? 'checked' : '' }}>
-                                        <label class="form-check-label text-dark fw-semibold" for="tech{{ $tech->id }}">
-                                            {{ $tech->name }} &mdash; <small class="text-muted">{{ $tech->satuan_kerja ?? 'Subbid Tekinfo' }} (NRP/NIP: {{ $tech->nrp_nip ?? '-' }})</small>
-                                        </label>
-                                    </div>
-                                @empty
-                                    <small class="text-danger">Belum ada akun personil dengan role Teknisi yang aktif.</small>
-                                @endforelse
-                            </div>
-                            @error('technician_ids')
-                                <div class="text-danger small mt-1">{{ $message }}</div>
-                            @enderror
-                            @if($availableTechnicians->isEmpty())
-                                <small class="text-danger">Belum ada anggota Teknisi aktif di tim. <a href="{{ route('padal.members.index') }}">Tambahkan anggota tim</a> sebelum menerima penugasan.</small>
-                            @endif
+                            <label for="padal_notes" class="form-label fw-semibold small text-secondary">Catatan Konfirmasi (Opsional)</label>
+                            <textarea name="padal_notes" id="padal_notes" rows="2" class="form-control" placeholder="Tuliskan catatan penerimaan penugasan...">{{ old('padal_notes') }}</textarea>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="padal_notes" class="form-label fw-semibold small text-secondary">Instruksi Awal untuk Tim Teknisi (Opsional)</label>
-                            <textarea name="padal_notes" id="padal_notes" rows="2" class="form-control" placeholder="Tuliskan arahan peralatan yang harus disiapkan atau penanganan khusus...">{{ old('padal_notes') }}</textarea>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary fw-bold px-4" @disabled($availableTechnicians->isEmpty())>
-                            <i class="bi bi-check-circle-fill me-1"></i> Terima Penugasan & Mulai Penanganan
+                        <button type="submit" class="btn btn-primary fw-bold px-4">
+                            <i class="bi bi-check-circle-fill me-1"></i> Terima Penugasan
                         </button>
                     </form>
 
@@ -165,7 +142,7 @@
                     <form action="{{ route('padal.tickets.technicians', $ticket->id) }}" method="POST">
                         @csrf
                         <div class="p-3 bg-light rounded border mb-2">
-                            @foreach($availableTechnicians as $tech)
+                            @forelse($availableTechnicians as $tech)
                                 <div class="form-check mb-1">
                                     <input class="form-check-input" type="checkbox" name="technician_ids[]" value="{{ $tech->id }}" id="techUpdate{{ $tech->id }}"
                                            {{ is_array($selectedTechnicianIds) && in_array($tech->id, $selectedTechnicianIds) ? 'checked' : '' }}>
@@ -175,7 +152,7 @@
                                 </div>
                             @empty
                                 <small class="text-muted">Belum ada anggota Teknisi aktif yang dapat dipilih. <a href="{{ route('padal.members.index') }}">Kelola anggota tim</a>.</small>
-                            @endforeach
+                            @endforelse
                         </div>
                         @error('technician_ids')
                             <div class="text-danger small mb-2">{{ $message }}</div>

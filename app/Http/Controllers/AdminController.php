@@ -11,13 +11,30 @@ use App\Models\TicketTechnicianAssignment;
 use App\Models\User;
 use App\Services\AccountActivationSender;
 use App\Services\EmailVerificationSender;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class AdminController extends Controller
 {
+    private function availablePadals(): Builder
+    {
+        return Padal::query()
+            ->where('status', 'aktif')
+            ->whereHas('leader', function (Builder $query) {
+                $query->where('role', User::ROLE_PADAL)
+                    ->where('is_active', true)
+                    ->where('approval_status', User::APPROVAL_ACTIVE)
+                    ->where(function (Builder $query) {
+                        $query->where('requires_email_verification', false)
+                            ->orWhereNotNull('email_verified_at');
+                    });
+            });
+    }
+
     /**
      * Dashboard Administrator
      */
@@ -32,10 +49,7 @@ class AdminController extends Controller
             'total_tickets' => Ticket::count(),
             'menunggu_verifikasi' => Ticket::where('status', Ticket::STATUS_MENUNGGU_VERIFIKASI)->count(),
             'menunggu_konfirmasi_padal' => Ticket::where('status', Ticket::STATUS_MENUNGGU_KONFIRMASI_PADAL)->count(),
-            'dalam_penanganan' => Ticket::whereIn('status', [
-                Ticket::STATUS_MENUNGGU_KONFIRMASI_PADAL,
-                Ticket::STATUS_DALAM_PENANGANAN,
-            ])->count(),
+            'dalam_penanganan' => Ticket::where('status', Ticket::STATUS_DALAM_PENANGANAN)->count(),
             'selesai' => Ticket::whereIn('status', $completedStatuses)->count(),
             'ditolak' => Ticket::whereIn('status', [Ticket::STATUS_DITOLAK_ADMIN, Ticket::STATUS_DITOLAK_PADAL])->count(),
             'total_users' => User::where('role', User::ROLE_USER)->count(),
@@ -73,7 +87,9 @@ class AdminController extends Controller
     {
         $query = Ticket::with(['user', 'category', 'padal.leader', 'technicians', 'rating']);
 
-        if ($request->filled('status')) {
+        if ($request->input('status') === 'selesai_semua') {
+            $query->whereIn('status', [Ticket::STATUS_SELESAI, Ticket::STATUS_SELESAI_DINILAI]);
+        } elseif ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
@@ -100,7 +116,7 @@ class AdminController extends Controller
 
         $tickets = $query->latest()->paginate(10)->withQueryString();
         $categories = Category::where('is_active', true)->get();
-        $padals = Padal::where('status', 'aktif')->with('leader')->get();
+        $padals = $this->availablePadals()->with('leader')->get();
 
         return view('admin.tickets.index', compact('tickets', 'categories', 'padals'));
     }
@@ -122,7 +138,7 @@ class AdminController extends Controller
             'histories.user'
         ])->findOrFail($id);
 
-        $padals = Padal::where('status', 'aktif')->with('leader')->get();
+        $padals = $this->availablePadals()->with('leader')->get();
 
         return view('admin.tickets.show', compact('ticket', 'padals'));
     }
@@ -132,12 +148,6 @@ class AdminController extends Controller
      */
     public function verifyAndAssign(Request $request, int $id)
     {
-        $ticket = Ticket::findOrFail($id);
-
-        if (!in_array($ticket->status, [Ticket::STATUS_MENUNGGU_VERIFIKASI, Ticket::STATUS_DITOLAK_PADAL])) {
-            return back()->with('error', 'Status tiket saat ini tidak memungkinkan untuk verifikasi/penugasan.');
-        }
-
         $validated = $request->validate([
             'padal_id' => ['required', 'exists:padals,id'],
             'admin_notes' => ['nullable', 'string', 'max:500'],
@@ -146,9 +156,22 @@ class AdminController extends Controller
             'padal_id.exists' => 'Data Padal tidak valid.',
         ]);
 
-        $padal = Padal::with('leader')->findOrFail($validated['padal_id']);
+        return DB::transaction(function () use ($id, $validated) {
+            $ticket = Ticket::whereKey($id)->lockForUpdate()->firstOrFail();
+            if (!in_array($ticket->status, [Ticket::STATUS_MENUNGGU_VERIFIKASI, Ticket::STATUS_DITOLAK_PADAL], true)) {
+                return back()->with('error', 'Status tiket saat ini tidak memungkinkan untuk verifikasi/penugasan.');
+            }
 
-        return DB::transaction(function () use ($ticket, $padal, $validated) {
+            $padal = $this->availablePadals()
+                ->with('leader')
+                ->find($validated['padal_id']);
+
+            if (!$padal) {
+                throw ValidationException::withMessages([
+                    'padal_id' => 'Pilih unit Padal aktif yang terhubung dengan akun Padal aktif dan disetujui.',
+                ]);
+            }
+
             $oldStatus = $ticket->status;
 
             $ticket->status = Ticket::STATUS_MENUNGGU_KONFIRMASI_PADAL;
@@ -179,8 +202,6 @@ class AdminController extends Controller
      */
     public function reassignTicket(Request $request, int $id)
     {
-        $ticket = Ticket::findOrFail($id);
-
         $validated = $request->validate([
             'padal_id' => ['required', 'exists:padals,id'],
             'admin_notes' => ['nullable', 'string', 'max:500'],
@@ -188,10 +209,18 @@ class AdminController extends Controller
             'padal_id.required' => 'Pilih unit Padal baru yang akan ditugaskan.',
         ]);
 
-        $padal = Padal::with('leader')->findOrFail($validated['padal_id']);
+        return DB::transaction(function () use ($id, $validated) {
+            $ticket = Ticket::with('padal')->whereKey($id)->lockForUpdate()->firstOrFail();
+            $padal = $this->availablePadals()
+                ->with('leader')
+                ->find($validated['padal_id']);
 
-        return DB::transaction(function () use ($ticket, $padal, $validated) {
-            $ticket = Ticket::whereKey($ticket->id)->lockForUpdate()->firstOrFail();
+            if (!$padal) {
+                throw ValidationException::withMessages([
+                    'padal_id' => 'Pilih unit Padal aktif yang terhubung dengan akun Padal aktif dan disetujui.',
+                ]);
+            }
+
             $oldStatus = $ticket->status;
             $oldPadalName = $ticket->padal ? $ticket->padal->nama_padal : 'Padal Sebelumnya';
 
@@ -640,13 +669,21 @@ class AdminController extends Controller
 
     public function destroyCategory(int $id)
     {
-        $category = Category::findOrFail($id);
+        $deleted = DB::transaction(function () use ($id): bool {
+            $category = Category::whereKey($id)->lockForUpdate()->firstOrFail();
 
-        if ($category->tickets()->exists()) {
-            return back()->with('error', 'Kategori tidak dapat dihapus karena digunakan pada data laporan tiket.');
+            if ($category->tickets()->exists()) {
+                return false;
+            }
+
+            $category->delete();
+            return true;
+        });
+
+        if (!$deleted) {
+            return back()->with('error', 'Kategori tidak dapat dihapus karena masih digunakan oleh tiket. Nonaktifkan kategori jika tidak ingin dipilih untuk laporan baru.');
         }
 
-        $category->delete();
         return back()->with('success', 'Kategori permasalahan berhasil dihapus.');
     }
 

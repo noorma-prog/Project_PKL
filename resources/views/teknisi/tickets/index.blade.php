@@ -74,7 +74,8 @@
                             <td><strong class="text-secondary small"><i class="bi bi-geo-alt me-1"></i>{{ $ticket->location }}</strong></td>
                             <td>
                                 @if($ticket->padal)
-                                    <div class="small fw-semibold text-dark"><i class="bi bi-person-badge text-warning me-1"></i>{{ $ticket->padal->name }}</div>
+                                    <div class="small fw-semibold text-dark"><i class="bi bi-person-badge text-warning me-1"></i>{{ $ticket->padal->nama_padal }}</div>
+                                    <small class="text-muted">{{ $ticket->padal->leader?->name ?? '-' }}</small>
                                 @else
                                     <small class="text-muted">-</small>
                                 @endif

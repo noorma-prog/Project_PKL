@@ -48,7 +48,10 @@
     <div class="col-lg-8">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white py-3">
-                <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-tags-fill text-primary me-2"></i> Daftar Kategori Gangguan IT Aktif</h6>
+                <div class="d-flex align-items-center justify-content-between">
+                    <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-tags-fill text-primary me-2"></i> Daftar Semua Kategori Gangguan IT</h6>
+                    <span class="badge bg-primary">{{ $categories->count() }} Kategori</span>
+                </div>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -84,8 +87,17 @@
                                     </td>
                                     <td class="text-end pe-3">
                                         <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editCategoryModal{{ $category->id }}">
-                                            <i class="bi bi-pencil"></i>
+                                            <i class="bi bi-pencil" aria-hidden="true"></i>
+                                            <span class="visually-hidden">Edit {{ $category->name }}</span>
                                         </button>
+                                        <form action="{{ route('admin.categories.destroy', $category->id) }}" method="POST" class="d-inline"
+                                              data-confirm="Hapus kategori '{{ $category->name }}'? Kategori yang telah digunakan oleh tiket tidak dapat dihapus.">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Hapus {{ $category->name }}">
+                                                <i class="bi bi-trash" aria-hidden="true"></i>
+                                            </button>
+                                        </form>
                                     </td>
                                 </tr>
 
@@ -141,4 +153,16 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    document.querySelectorAll('form[data-confirm]').forEach((form) => {
+        form.addEventListener('submit', (event) => {
+            if (!window.confirm(form.dataset.confirm)) {
+                event.preventDefault();
+            }
+        });
+    });
+</script>
 @endsection

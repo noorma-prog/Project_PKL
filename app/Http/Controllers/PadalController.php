@@ -23,21 +23,9 @@ class PadalController extends Controller
      */
     private function getCurrentPadal(): Padal
     {
-        $padal = Padal::where('user_id', Auth::id())->first();
-
-        if (!$padal) {
-            // Jika belum terdaftar di tabel padal, buat otomatis atau ambil unit pertama
-            $padal = Padal::firstOrCreate(
-                ['user_id' => Auth::id()],
-                [
-                    'nama_padal' => 'Regu Padal ' . Auth::user()->name,
-                    'deskripsi' => 'Unit Perwira Pengendali ' . Auth::user()->name,
-                    'status' => 'aktif',
-                ]
-            );
-        }
-
-        return $padal;
+        return Padal::where('user_id', Auth::id())
+            ->where('status', 'aktif')
+            ->firstOrFail();
     }
 
     /**
@@ -89,7 +77,9 @@ class PadalController extends Controller
         $query = Ticket::with(['user', 'category', 'rating'])
             ->where('padal_id', $padal->id);
 
-        if ($request->filled('status')) {
+        if ($request->input('status') === 'selesai_semua') {
+            $query->whereIn('status', [Ticket::STATUS_SELESAI, Ticket::STATUS_SELESAI_DINILAI]);
+        } elseif ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
@@ -153,47 +143,21 @@ class PadalController extends Controller
     public function acceptAssignment(Request $request, $id)
     {
         $padal = $this->getCurrentPadal();
-        $ticket = Ticket::where('padal_id', $padal->id)->findOrFail($id);
-
-        if ($ticket->status !== Ticket::STATUS_MENUNGGU_KONFIRMASI_PADAL) {
-            return back()->with('error', 'Hanya laporan dengan status Menunggu Konfirmasi Padal yang dapat diterima.');
-        }
-
         $validated = $request->validate([
-            'technician_ids' => ['required', 'array', 'min:1'],
-            'technician_ids.*' => ['required', 'integer', 'distinct'],
             'padal_notes' => ['nullable', 'string', 'max:500'],
         ]);
 
-        return DB::transaction(function () use ($ticket, $padal, $validated) {
-            $ticket = Ticket::whereKey($ticket->id)->lockForUpdate()->firstOrFail();
+        return DB::transaction(function () use ($id, $padal, $validated) {
+            $ticket = Ticket::where('padal_id', $padal->id)
+                ->whereKey($id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
             if ($ticket->status !== Ticket::STATUS_MENUNGGU_KONFIRMASI_PADAL) {
-                return back()->with('error', 'Penugasan ini sudah diproses sebelumnya.');
-            }
-
-            $technicianIds = array_map('intval', $validated['technician_ids']);
-            $eligibleIds = $padal->members()
-                ->where('users.role', User::ROLE_TEKNISI)
-                ->where('users.is_active', true)
-                ->where('users.approval_status', User::APPROVAL_ACTIVE)
-                ->where(function ($query) {
-                    $query->where('users.requires_email_verification', false)
-                        ->orWhereNotNull('users.email_verified_at');
-                })
-                ->whereIn('users.id', $technicianIds)
-                ->pluck('users.id')
-                ->map(fn ($id) => (int) $id)
-                ->all();
-
-            if (count($eligibleIds) !== count(array_unique($technicianIds))) {
-                throw ValidationException::withMessages([
-                    'technician_ids' => 'Pilih hanya teknisi aktif yang sudah menjadi anggota tim Padal Anda.',
-                ]);
+                return back()->with('error', 'Hanya laporan dengan status Menunggu Konfirmasi Padal yang dapat diterima.');
             }
 
             $oldStatus = $ticket->status;
-            $this->updateTicketTechnicianAssignments($ticket, $technicianIds);
-
             $ticket->status = Ticket::STATUS_DALAM_PENANGANAN;
             $ticket->started_at = now();
             $ticket->save();
@@ -203,11 +167,11 @@ class PadalController extends Controller
                 'user_id' => Auth::id(),
                 'status_from' => $oldStatus,
                 'status_to' => Ticket::STATUS_DALAM_PENANGANAN,
-                'notes' => 'Penugasan DITERIMA oleh Perwira Pengendali (' . Auth::user()->name . ' - ' . $padal->nama_padal . '). Penanganan teknis dimulai.' . (!empty($validated['padal_notes']) ? ' Catatan: ' . $validated['padal_notes'] : ''),
+                'notes' => 'Penugasan DITERIMA oleh Perwira Pengendali (' . Auth::user()->name . ' - ' . $padal->nama_padal . ').' . (!empty($validated['padal_notes']) ? ' Catatan: ' . $validated['padal_notes'] : ''),
             ]);
 
             return redirect()->route('padal.tickets.show', $ticket->id)
-                ->with('success', 'Penugasan berhasil diterima. Status laporan kini Dalam Penanganan.');
+                ->with('success', 'Penugasan berhasil diterima. Anda dapat menetapkan anggota Teknisi untuk menangani laporan.');
         });
     }
 
@@ -217,12 +181,6 @@ class PadalController extends Controller
     public function rejectAssignment(Request $request, $id)
     {
         $padal = $this->getCurrentPadal();
-        $ticket = Ticket::where('padal_id', $padal->id)->findOrFail($id);
-
-        if ($ticket->status !== Ticket::STATUS_MENUNGGU_KONFIRMASI_PADAL) {
-            return back()->with('error', 'Hanya laporan berstatus Menunggu Konfirmasi Padal yang dapat ditolak penugasannya.');
-        }
-
         $validated = $request->validate([
             'rejection_reason' => ['required', 'string', 'min:5', 'max:1000'],
         ], [
@@ -230,7 +188,16 @@ class PadalController extends Controller
             'rejection_reason.min' => 'Alasan penolakan minimal 5 karakter.',
         ]);
 
-        return DB::transaction(function () use ($ticket, $padal, $validated) {
+        return DB::transaction(function () use ($id, $padal, $validated) {
+            $ticket = Ticket::where('padal_id', $padal->id)
+                ->whereKey($id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($ticket->status !== Ticket::STATUS_MENUNGGU_KONFIRMASI_PADAL) {
+                return back()->with('error', 'Hanya laporan berstatus Menunggu Konfirmasi Padal yang dapat ditolak penugasannya.');
+            }
+
             $oldStatus = $ticket->status;
 
             $ticket->status = Ticket::STATUS_DITOLAK_PADAL;
@@ -281,12 +248,6 @@ class PadalController extends Controller
     public function completeTicket(Request $request, $id)
     {
         $padal = $this->getCurrentPadal();
-        $ticket = Ticket::where('padal_id', $padal->id)->findOrFail($id);
-
-        if ($ticket->status !== Ticket::STATUS_DALAM_PENANGANAN) {
-            return back()->with('error', 'Hanya laporan Dalam Penanganan yang dapat diselesaikan.');
-        }
-
         $validated = $request->validate([
             'resolution_notes' => ['required', 'string', 'min:10', 'max:2000'],
             'resolution_attachment' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
@@ -296,7 +257,16 @@ class PadalController extends Controller
             'resolution_attachment.mimes' => 'Format berkas bukti harus JPG, PNG, atau PDF.',
         ]);
 
-        return DB::transaction(function () use ($ticket, $padal, $request, $validated) {
+        return DB::transaction(function () use ($id, $padal, $request, $validated) {
+            $ticket = Ticket::where('padal_id', $padal->id)
+                ->whereKey($id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($ticket->status !== Ticket::STATUS_DALAM_PENANGANAN) {
+                return back()->with('error', 'Hanya laporan Dalam Penanganan yang dapat diselesaikan.');
+            }
+
             $oldStatus = $ticket->status;
 
             $attachmentPath = null;

@@ -8,7 +8,7 @@
 <!-- Statistik Utama -->
 <div class="row g-3 mb-4">
     <div class="col-sm-6 col-xl-3">
-        <div class="stat-card d-flex align-items-center justify-content-between">
+        <a href="{{ route('admin.tickets.index') }}" class="stat-card d-flex align-items-center justify-content-between text-decoration-none text-reset" aria-label="Lihat seluruh {{ $stats['total_tickets'] }} laporan">
             <div>
                 <span class="text-muted small fw-semibold">Total Laporan</span>
                 <h3 class="fw-bold mb-0 text-dark mt-1">{{ $stats['total_tickets'] }}</h3>
@@ -16,10 +16,10 @@
             <div class="stat-icon bg-primary bg-opacity-10 text-primary">
                 <i class="bi bi-ticket-detailed"></i>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-sm-6 col-xl-3">
-        <div class="stat-card d-flex align-items-center justify-content-between">
+        <a href="{{ route('admin.tickets.index', ['status' => 'menunggu_verifikasi']) }}" class="stat-card d-flex align-items-center justify-content-between text-decoration-none text-reset" aria-label="Lihat {{ $stats['menunggu_verifikasi'] }} laporan yang perlu verifikasi">
             <div>
                 <span class="text-muted small fw-semibold">Perlu Verifikasi</span>
                 <h3 class="fw-bold mb-0 text-danger mt-1">{{ $stats['menunggu_verifikasi'] }}</h3>
@@ -27,10 +27,10 @@
             <div class="stat-icon bg-danger bg-opacity-10 text-danger">
                 <i class="bi bi-exclamation-diamond-fill"></i>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-sm-6 col-xl-3">
-        <div class="stat-card d-flex align-items-center justify-content-between">
+        <a href="{{ route('admin.tickets.index', ['status' => 'dalam_penanganan']) }}" class="stat-card d-flex align-items-center justify-content-between text-decoration-none text-reset" aria-label="Lihat {{ $stats['dalam_penanganan'] }} laporan dalam penanganan">
             <div>
                 <span class="text-muted small fw-semibold">Dalam Penanganan</span>
                 <h3 class="fw-bold mb-0 text-info mt-1">{{ $stats['dalam_penanganan'] }}</h3>
@@ -38,10 +38,10 @@
             <div class="stat-icon bg-info bg-opacity-10 text-info">
                 <i class="bi bi-gear-wide-connected"></i>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-sm-6 col-xl-3">
-        <div class="stat-card d-flex align-items-center justify-content-between">
+        <a href="{{ route('admin.tickets.index', ['status' => 'selesai_semua']) }}" class="stat-card d-flex align-items-center justify-content-between text-decoration-none text-reset" aria-label="Lihat {{ $stats['selesai'] }} laporan selesai">
             <div>
                 <span class="text-muted small fw-semibold">Laporan Selesai</span>
                 <h3 class="fw-bold mb-0 text-success mt-1">{{ $stats['selesai'] }}</h3>
@@ -49,14 +49,14 @@
             <div class="stat-icon bg-success bg-opacity-10 text-success">
                 <i class="bi bi-check2-all"></i>
             </div>
-        </div>
+        </a>
     </div>
 </div>
 
 <!-- Statistik Sekunder: Personil & Rating -->
 <div class="row g-3 mb-4">
     <div class="col-sm-6 col-xl-3">
-        <div class="card shadow-sm border-0 p-3">
+        <a href="{{ route('admin.padals.index') }}" class="card shadow-sm border-0 p-3 text-decoration-none text-reset">
             <div class="d-flex align-items-center gap-3">
                 <div class="rounded bg-primary bg-opacity-10 p-2 text-primary fs-4"><i class="bi bi-person-badge"></i></div>
                 <div>
@@ -64,10 +64,10 @@
                     <strong class="fs-5 text-dark">{{ $stats['total_padal'] }} Personil</strong>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-sm-6 col-xl-3">
-        <div class="card shadow-sm border-0 p-3">
+        <a href="{{ route('admin.users.index', ['role' => 'teknisi']) }}" class="card shadow-sm border-0 p-3 text-decoration-none text-reset">
             <div class="d-flex align-items-center gap-3">
                 <div class="rounded bg-info bg-opacity-10 text-info p-2 fs-4"><i class="bi bi-tools"></i></div>
                 <div>
@@ -75,10 +75,10 @@
                     <strong class="fs-5 text-dark">{{ $stats['total_teknisi'] }} Personil</strong>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-sm-6 col-xl-3">
-        <div class="card shadow-sm border-0 p-3">
+        <a href="{{ route('admin.users.index', ['role' => 'user']) }}" class="card shadow-sm border-0 p-3 text-decoration-none text-reset">
             <div class="d-flex align-items-center gap-3">
                 <div class="rounded bg-secondary bg-opacity-10 text-secondary p-2 fs-4"><i class="bi bi-people"></i></div>
                 <div>
@@ -86,10 +86,10 @@
                     <strong class="fs-5 text-dark">{{ $stats['total_users'] }} Pengguna</strong>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-sm-6 col-xl-3">
-        <div class="card shadow-sm border-0 p-3">
+        <a href="{{ route('admin.ratings.index') }}" class="card shadow-sm border-0 p-3 text-decoration-none text-reset">
             <div class="d-flex align-items-center gap-3">
                 <div class="rounded bg-warning bg-opacity-10 text-warning p-2 fs-4"><i class="bi bi-star-fill"></i></div>
                 <div>
@@ -97,7 +97,7 @@
                     <strong class="fs-5 text-dark">{{ $stats['avg_rating'] }} / 5.0 Bintang</strong>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
 </div>
 

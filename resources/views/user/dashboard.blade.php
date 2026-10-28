@@ -50,7 +50,7 @@
 <!-- Statistik Cards -->
 <div class="row g-3 mb-4">
     <div class="col-sm-6 col-xl-3">
-        <div class="stat-card d-flex align-items-center justify-content-between">
+        <a href="{{ route('user.tickets.index') }}" class="stat-card d-flex align-items-center justify-content-between text-decoration-none text-reset" aria-label="Lihat seluruh {{ $stats['total'] }} laporan saya">
             <div>
                 <span class="text-muted small fw-semibold">Total Laporan</span>
                 <h3 class="fw-bold mb-0 text-dark mt-1">{{ $stats['total'] }}</h3>
@@ -58,10 +58,10 @@
             <div class="stat-icon bg-primary bg-opacity-10 text-primary">
                 <i class="bi bi-journal-text"></i>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-sm-6 col-xl-3">
-        <div class="stat-card d-flex align-items-center justify-content-between">
+        <a href="{{ route('user.tickets.index', ['status' => 'menunggu_verifikasi']) }}" class="stat-card d-flex align-items-center justify-content-between text-decoration-none text-reset" aria-label="Lihat {{ $stats['menunggu_verifikasi'] }} laporan menunggu verifikasi">
             <div>
                 <span class="text-muted small fw-semibold">Menunggu Verifikasi</span>
                 <h3 class="fw-bold mb-0 text-warning mt-1">{{ $stats['menunggu_verifikasi'] }}</h3>
@@ -69,10 +69,10 @@
             <div class="stat-icon bg-warning bg-opacity-10 text-warning">
                 <i class="bi bi-hourglass-split"></i>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-sm-6 col-xl-3">
-        <div class="stat-card d-flex align-items-center justify-content-between">
+        <a href="{{ route('user.tickets.index', ['status' => 'dalam_penanganan']) }}" class="stat-card d-flex align-items-center justify-content-between text-decoration-none text-reset" aria-label="Lihat {{ $stats['dalam_penanganan'] }} laporan dalam penanganan">
             <div>
                 <span class="text-muted small fw-semibold">Dalam Penanganan</span>
                 <h3 class="fw-bold mb-0 text-info mt-1">{{ $stats['dalam_penanganan'] }}</h3>
@@ -80,10 +80,10 @@
             <div class="stat-icon bg-info bg-opacity-10 text-info">
                 <i class="bi bi-gear-wide-connected"></i>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-sm-6 col-xl-3">
-        <div class="stat-card d-flex align-items-center justify-content-between">
+        <a href="{{ route('user.tickets.index', ['status' => 'selesai_semua']) }}" class="stat-card d-flex align-items-center justify-content-between text-decoration-none text-reset" aria-label="Lihat {{ $stats['selesai'] }} laporan selesai">
             <div>
                 <span class="text-muted small fw-semibold">Laporan Selesai</span>
                 <h3 class="fw-bold mb-0 text-success mt-1">{{ $stats['selesai'] }}</h3>
@@ -91,7 +91,7 @@
             <div class="stat-icon bg-success bg-opacity-10 text-success">
                 <i class="bi bi-check-circle"></i>
             </div>
-        </div>
+        </a>
     </div>
 </div>
 

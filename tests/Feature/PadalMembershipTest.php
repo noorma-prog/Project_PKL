@@ -79,7 +79,8 @@ class PadalMembershipTest extends TestCase
             ->assertSee($second->name);
         $this->get(route('padal.dashboard'))
             ->assertOk()
-            ->assertSee('Tambah Anggota')
+            ->assertSee('Kelola Anggota')
+            ->assertSee(route('padal.members.index'))
             ->assertSee($first->name)
             ->assertSee($second->name);
 
@@ -118,10 +119,56 @@ class PadalMembershipTest extends TestCase
 
         $admin = $this->createUser(User::ROLE_ADMIN, 'admin');
         $this->actingAs($admin)
-            ->post(route('padal.members.store'), ['technician_ids' => [$inactive->id]])
+            ->get(route('padal.members.index'))
+            ->assertForbidden();
+        $this->post(route('padal.members.store'), ['technician_ids' => [$inactive->id]])
+            ->assertForbidden();
+        $this->delete(route('padal.members.destroy', $inactive->id))
             ->assertForbidden();
 
         $this->assertDatabaseCount('padal_anggota', 0);
+    }
+
+    public function test_admin_cannot_manage_padals_membership_records(): void
+    {
+        $admin = $this->createUser(User::ROLE_ADMIN, 'admin-membership');
+        $technician = $this->createUser(User::ROLE_TEKNISI, 'teknisi-membership');
+
+        $this->actingAs($admin)
+            ->get(route('padal.members.index'))
+            ->assertForbidden();
+        $this->post(route('padal.members.store'), ['technician_ids' => [$technician->id]])
+            ->assertForbidden();
+        $this->delete(route('padal.members.destroy', $technician->id))
+            ->assertForbidden();
+
+        $this->assertDatabaseCount('padal_anggota', 0);
+    }
+
+    public function test_padal_can_remove_a_member_from_its_own_team(): void
+    {
+        $technician = $this->createUser(User::ROLE_TEKNISI, 'teknisi-hapus');
+        PadalAnggota::create([
+            'padal_id' => $this->padal->id,
+            'user_id' => $technician->id,
+            'tanggal_bergabung' => now(),
+        ]);
+
+        $this->actingAs($this->padalUser)
+            ->get(route('padal.members.index'))
+            ->assertOk()
+            ->assertSee($technician->name)
+            ->assertSee('Hapus');
+
+        $this->delete(route('padal.members.destroy', $technician->id))
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseMissing('padal_anggota', [
+            'padal_id' => $this->padal->id,
+            'user_id' => $technician->id,
+        ]);
+        $this->assertDatabaseHas('users', ['id' => $technician->id]);
     }
 
     public function test_accepting_assignment_stores_technician_assignment_and_ticket_history(): void
@@ -136,7 +183,6 @@ class PadalMembershipTest extends TestCase
 
         $this->actingAs($this->padalUser)
             ->post(route('padal.tickets.accept', $ticket->id), [
-                'technician_ids' => [$technician->id],
                 'padal_notes' => 'Periksa koneksi jaringan.',
             ])
             ->assertRedirect(route('padal.tickets.show', $ticket->id))
@@ -144,6 +190,13 @@ class PadalMembershipTest extends TestCase
 
         $ticket->refresh();
         $this->assertSame(Ticket::STATUS_DALAM_PENANGANAN, $ticket->status);
+        $this->assertCount(0, $ticket->technicians);
+
+        $this->post(route('padal.tickets.technicians', $ticket->id), [
+            'technician_ids' => [$technician->id],
+        ])->assertRedirect()->assertSessionHas('success');
+
+        $ticket->refresh();
         $this->assertTrue($ticket->technicians->contains('id', $technician->id));
         $this->assertDatabaseHas('ticket_technician_assignments', [
             'ticket_id' => $ticket->id,

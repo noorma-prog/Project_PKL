@@ -8,7 +8,7 @@
 <!-- Statistik Padal -->
 <div class="row g-3 mb-4">
     <div class="col-sm-6 col-xl-3">
-        <div class="stat-card d-flex align-items-center justify-content-between">
+        <a href="{{ route('padal.tickets.index') }}" class="stat-card d-flex align-items-center justify-content-between text-decoration-none text-reset" aria-label="Lihat seluruh {{ $stats['total_ditugaskan'] }} tiket yang ditugaskan">
             <div>
                 <span class="text-muted small fw-semibold">Tiket Ditugaskan</span>
                 <h3 class="fw-bold mb-0 text-dark mt-1">{{ $stats['total_ditugaskan'] }}</h3>
@@ -16,10 +16,10 @@
             <div class="stat-icon bg-primary bg-opacity-10 text-primary">
                 <i class="bi bi-clipboard-check"></i>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-sm-6 col-xl-3">
-        <div class="stat-card d-flex align-items-center justify-content-between">
+        <a href="{{ route('padal.tickets.index', ['status' => 'menunggu_konfirmasi_padal']) }}" class="stat-card d-flex align-items-center justify-content-between text-decoration-none text-reset" aria-label="Lihat {{ $stats['menunggu_konfirmasi'] }} tiket yang menunggu konfirmasi">
             <div>
                 <span class="text-muted small fw-semibold">Menunggu Konfirmasi</span>
                 <h3 class="fw-bold mb-0 text-warning mt-1">{{ $stats['menunggu_konfirmasi'] }}</h3>
@@ -27,10 +27,10 @@
             <div class="stat-icon bg-warning bg-opacity-10 text-warning">
                 <i class="bi bi-clock-history"></i>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-sm-6 col-xl-3">
-        <div class="stat-card d-flex align-items-center justify-content-between">
+        <a href="{{ route('padal.tickets.index', ['status' => 'dalam_penanganan']) }}" class="stat-card d-flex align-items-center justify-content-between text-decoration-none text-reset" aria-label="Lihat {{ $stats['dalam_penanganan'] }} tiket dalam penanganan">
             <div>
                 <span class="text-muted small fw-semibold">Dalam Penanganan</span>
                 <h3 class="fw-bold mb-0 text-info mt-1">{{ $stats['dalam_penanganan'] }}</h3>
@@ -38,10 +38,10 @@
             <div class="stat-icon bg-info bg-opacity-10 text-info">
                 <i class="bi bi-gear-wide-connected"></i>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-sm-6 col-xl-3">
-        <div class="stat-card d-flex align-items-center justify-content-between">
+        <a href="{{ route('padal.tickets.index', ['status' => 'selesai_semua']) }}" class="stat-card d-flex align-items-center justify-content-between text-decoration-none text-reset" aria-label="Lihat {{ $stats['selesai'] }} tiket selesai">
             <div>
                 <span class="text-muted small fw-semibold">Telah Selesai</span>
                 <h3 class="fw-bold mb-0 text-success mt-1">{{ $stats['selesai'] }}</h3>
@@ -49,16 +49,16 @@
             <div class="stat-icon bg-success bg-opacity-10 text-success">
                 <i class="bi bi-check-circle-fill"></i>
             </div>
-        </div>
+        </a>
     </div>
 </div>
 
-<div class="card shadow-sm border-0 mb-4">
+<a href="{{ route('padal.members.index') }}" class="card shadow-sm border-0 mb-4 text-decoration-none text-reset" aria-label="Kelola {{ $stats['total_anggota'] }} anggota teknisi tim Anda">
     <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
         <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-people-fill text-primary me-2"></i>Anggota Teknisi Tim Anda ({{ $members->count() }})</h6>
-        <a href="{{ route('padal.members.index') }}" class="btn btn-sm btn-outline-primary">
-            <i class="bi bi-person-plus me-1"></i> Tambah Anggota
-        </a>
+        <span class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-people-fill me-1"></i> Kelola Anggota
+        </span>
     </div>
     <div class="card-body">
         @forelse($members as $member)
@@ -68,8 +68,7 @@
         @empty
             <p class="text-muted small mb-0">Belum ada teknisi di tim. Tambahkan anggota untuk dapat memilih teknisi pada penugasan tiket.</p>
         @endforelse
-    </div>
-</div>
+    </a>
 
 <!-- Laporan Menunggu Konfirmasi Padal -->
 @if($pendingTickets->isNotEmpty())

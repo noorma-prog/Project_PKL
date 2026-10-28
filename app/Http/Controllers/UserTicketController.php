@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class UserTicketController extends Controller
 {
@@ -53,7 +54,9 @@ class UserTicketController extends Controller
         $query = $user->tickets()->with(['category', 'padal', 'rating']);
 
         // Filter status
-        if ($request->filled('status')) {
+        if ($request->input('status') === 'selesai_semua') {
+            $query->whereIn('status', [Ticket::STATUS_SELESAI, Ticket::STATUS_SELESAI_DINILAI]);
+        } elseif ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
@@ -115,14 +118,14 @@ class UserTicketController extends Controller
         }
 
         $validated = $request->validate([
-            'category_id' => ['required', 'exists:categories,id'],
+            'category_id' => ['required', Rule::exists('categories', 'id')->where('is_active', true)],
             'title' => ['required', 'string', 'max:255'],
             'location' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
             'attachment' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'], // Max 5MB
         ], [
             'category_id.required' => 'Pilih kategori gangguan IT.',
-            'category_id.exists' => 'Kategori yang dipilih tidak valid.',
+            'category_id.exists' => 'Kategori yang dipilih tidak valid atau sudah nonaktif.',
             'title.required' => 'Judul laporan permasalahan wajib diisi.',
             'location.required' => 'Lokasi ruangan / satuan kerja wajib diisi.',
             'description.required' => 'Deskripsi detail permasalahan wajib diisi.',

@@ -16,7 +16,7 @@
 <!-- Statistik Teknisi -->
 <div class="row g-3 mb-4">
     <div class="col-md-4">
-        <div class="stat-card d-flex align-items-center justify-content-between">
+        <a href="{{ route('teknisi.tickets.index') }}" class="stat-card d-flex align-items-center justify-content-between text-decoration-none text-reset" aria-label="Lihat seluruh {{ $stats['total_penugasan'] }} tiket yang ditugaskan">
             <div>
                 <span class="text-muted small fw-semibold">Total Penugasan Tim</span>
                 <h3 class="fw-bold mb-0 text-dark mt-1">{{ $stats['total_penugasan'] }}</h3>
@@ -24,10 +24,10 @@
             <div class="stat-icon bg-primary bg-opacity-10 text-primary">
                 <i class="bi bi-tools"></i>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-md-4">
-        <div class="stat-card d-flex align-items-center justify-content-between">
+        <a href="{{ route('teknisi.tickets.index', ['status' => 'dalam_penanganan']) }}" class="stat-card d-flex align-items-center justify-content-between text-decoration-none text-reset" aria-label="Lihat {{ $stats['dalam_penanganan'] }} tiket dalam penanganan">
             <div>
                 <span class="text-muted small fw-semibold">Sedang Dalam Penanganan</span>
                 <h3 class="fw-bold mb-0 text-info mt-1">{{ $stats['dalam_penanganan'] }}</h3>
@@ -35,10 +35,10 @@
             <div class="stat-icon bg-info bg-opacity-10 text-info">
                 <i class="bi bi-gear-wide-connected"></i>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-md-4">
-        <div class="stat-card d-flex align-items-center justify-content-between">
+        <a href="{{ route('teknisi.tickets.index', ['status' => 'selesai_semua']) }}" class="stat-card d-flex align-items-center justify-content-between text-decoration-none text-reset" aria-label="Lihat {{ $stats['selesai'] }} tiket selesai">
             <div>
                 <span class="text-muted small fw-semibold">Telah Diselesaikan</span>
                 <h3 class="fw-bold mb-0 text-success mt-1">{{ $stats['selesai'] }}</h3>
@@ -46,7 +46,7 @@
             <div class="stat-icon bg-success bg-opacity-10 text-success">
                 <i class="bi bi-check2-circle"></i>
             </div>
-        </div>
+        </a>
     </div>
 </div>
 
@@ -87,7 +87,8 @@
                             <td><strong class="text-secondary small">{{ $ticket->location }}</strong></td>
                             <td>
                                 @if($ticket->padal)
-                                    <small class="fw-semibold text-dark">{{ $ticket->padal->name }}</small>
+                                    <small class="fw-semibold text-dark">{{ $ticket->padal->nama_padal }}</small>
+                                    <small class="text-muted d-block">{{ $ticket->padal->leader?->name ?? '-' }}</small>
                                 @else
                                     <small class="text-muted">-</small>
                                 @endif
