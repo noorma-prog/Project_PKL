@@ -24,11 +24,6 @@ if [[ "$(git -C "$APP_DIR" branch --show-current)" != main ]]; then
     exit 1
 fi
 
-if ! git -C "$APP_DIR" diff --quiet || ! git -C "$APP_DIR" diff --cached --quiet; then
-    printf 'Hosted tracked files have local edits. Commit or resolve them before updating.\n' >&2
-    exit 1
-fi
-
 if [[ ! -x "$NODE_BIN/npm" || ! -x "$NODE_BIN/node" ]]; then
     printf 'Expected Node.js 22 toolchain is missing at %s.\n' "$NODE_BIN" >&2
     exit 1
@@ -47,6 +42,22 @@ if ! git merge-base --is-ancestor HEAD origin/main; then
     printf 'Local main is ahead of or has diverged from origin/main; refusing to overwrite commits.\n' >&2
     exit 1
 fi
+
+mapfile -d '' dirty_paths < <(
+    { git diff --name-only -z; git diff --cached --name-only -z; } | sort -zu
+)
+
+for path in "${dirty_paths[@]}"; do
+    local_blob=$(git hash-object -- "$path")
+    remote_blob=$(git rev-parse "origin/main:$path" 2>/dev/null || true)
+
+    if [[ -z "$remote_blob" || "$local_blob" != "$remote_blob" ]]; then
+        printf 'Hosted tracked file differs from origin/main; refusing to overwrite: %s\n' "$path" >&2
+        exit 1
+    fi
+
+    git restore --source=origin/main --staged --worktree -- "$path"
+done
 
 git merge --ff-only origin/main
 composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
