@@ -162,6 +162,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     // Rekapitulasi Laporan Penanganan
     Route::get('/reports/recap', [AdminController::class, 'reportRecap'])->name('reports.recap');
+    Route::get('/reports/recap/preview', [AdminController::class, 'previewReportRecap'])->name('reports.recap.preview');
+    Route::get('/reports/recap/export', [AdminController::class, 'exportReportRecap'])->name('reports.recap.export');
 });
 
 // -------------------------------------------------------------

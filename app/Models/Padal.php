@@ -78,6 +78,11 @@ class Padal extends Model
         return round((float) $this->ratings()->avg('rating'), 1) ?: 0.0;
     }
 
+    public function getNameAttribute(): string
+    {
+        return $this->nama_padal;
+    }
+
     // Accessor atribut ERD
     public function getIdPadalAttribute()
     {

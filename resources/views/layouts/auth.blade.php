@@ -62,20 +62,23 @@
             background: linear-gradient(90deg, #d97706, #fbbf24, #d97706);
         }
         .badge-logo {
-            width: 72px;
-            height: 72px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(251, 191, 36, 0.6);
-            border-radius: 50%;
+            width: 88px;
+            height: 88px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             margin-bottom: 1rem;
-            box-shadow: 0 0 20px rgba(217, 119, 6, 0.3);
+            background: transparent;
+            border-radius: 0;
+            padding: 0;
+            box-shadow: none;
         }
-        .badge-logo i {
-            font-size: 2.25rem;
-            color: #fbbf24;
+        .badge-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            background: transparent;
         }
         .auth-body {
             padding: 2.25rem 2rem;
@@ -141,7 +144,7 @@
     <div class="auth-card">
         <div class="auth-header">
             <div class="badge-logo">
-                <i class="bi bi-shield-check"></i>
+                <img src="{{ asset('images/logo LAYANIT.png') }}" alt="Logo LayanIT">
             </div>
             <h3 class="fw-bold mb-1 tracking-tight text-white">LayanIT POLDA</h3>
             <p class="text-white-50 mb-0 small">Sistem Helpdesk & Pelayanan Teknologi Informasi</p>

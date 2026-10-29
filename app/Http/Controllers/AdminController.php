@@ -11,8 +11,10 @@ use App\Models\TicketTechnicianAssignment;
 use App\Models\User;
 use App\Services\AccountActivationSender;
 use App\Services\EmailVerificationSender;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -786,17 +788,19 @@ class AdminController extends Controller
     // -------------------------------------------------------------
     // USE CASE: REKAP LAPORAN (Filter Periode & Cetak Laporan)
     // -------------------------------------------------------------
-    public function reportRecap(Request $request)
+    private function resolveRecapFilters(Request $request): array
     {
-        $query = Ticket::with(['user', 'category', 'padal.leader', 'rating']);
+        $dateFrom = $request->filled('date_from') ? Carbon::parse($request->date_from)->startOfDay() : Carbon::now()->startOfMonth();
+        $dateTo = $request->filled('date_to') ? Carbon::parse($request->date_to)->endOfDay() : Carbon::now()->endOfMonth();
 
-        if ($request->filled('date_from')) {
-            $query->whereDate('created_at', '>=', $request->date_from);
+        if ($request->filled('date_from') && $request->filled('date_to') && $request->date_from > $request->date_to) {
+            [$dateFrom, $dateTo] = [$dateTo, $dateFrom];
         }
 
-        if ($request->filled('date_to')) {
-            $query->whereDate('created_at', '<=', $request->date_to);
-        }
+        Carbon::setLocale('id');
+
+        $query = Ticket::with(['user', 'category', 'padal.leader', 'rating'])
+            ->whereBetween('created_at', [$dateFrom, $dateTo]);
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -811,9 +815,55 @@ class AdminController extends Controller
         }
 
         $tickets = $query->latest()->get();
-        $categories = Category::all();
-        $padals = Padal::all();
 
-        return view('admin.reports.recap', compact('tickets', 'categories', 'padals'));
+        return [
+            'tickets' => $tickets,
+            'categories' => Category::all(),
+            'padals' => Padal::all(),
+            'dateFrom' => $dateFrom,
+            'dateTo' => $dateTo,
+        ];
+    }
+
+    public function reportRecap(Request $request)
+    {
+        $data = $this->resolveRecapFilters($request);
+
+        return view('admin.reports.recap', $data);
+    }
+
+    public function previewReportRecap(Request $request)
+    {
+        $data = $this->resolveRecapFilters($request);
+        $reportStart = $data['dateFrom'];
+        $reportEnd = $data['dateTo'];
+
+        return view('admin.reports.preview', [
+            'tickets' => $data['tickets'],
+            'reportStart' => $reportStart,
+            'reportEnd' => $reportEnd,
+            'createdAt' => now(),
+            'isEmpty' => $data['tickets']->isEmpty(),
+        ] + $request->query());
+    }
+
+    public function exportReportRecap(Request $request)
+    {
+        $data = $this->resolveRecapFilters($request);
+        $reportStart = $data['dateFrom'];
+        $reportEnd = $data['dateTo'];
+        $monthLabel = $reportStart->translatedFormat('F Y');
+        $fileName = 'Rekapitulasi_Laporan_LayanIT_' . $reportStart->translatedFormat('F') . '_' . $reportStart->format('Y') . '.pdf';
+
+        $pdf = Pdf::loadView('admin.reports.pdf', [
+            'tickets' => $data['tickets'],
+            'reportStart' => $reportStart,
+            'reportEnd' => $reportEnd,
+            'createdAt' => now(),
+            'monthLabel' => $monthLabel,
+            'isEmpty' => $data['tickets']->isEmpty(),
+        ])->setPaper('a4', 'landscape');
+
+        return $pdf->download($fileName);
     }
 }

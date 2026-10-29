@@ -72,11 +72,8 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-2 d-flex gap-2">
-                <button type="submit" class="btn btn-primary flex-grow-1"><i class="bi bi-filter"></i> Filter</button>
-                <button type="button" class="btn btn-outline-dark btn-print" onclick="window.print()" title="Cetak Rekapitulasi">
-                    <i class="bi bi-printer-fill"></i>
-                </button>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100"><i class="bi bi-filter"></i> Filter</button>
             </div>
         </form>
     </div>
@@ -114,9 +111,9 @@
 <div class="card shadow-sm border-0">
     <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
         <h6 class="mb-0 fw-bold text-dark">Data Rekapitulasi Laporan ({{ $tickets->count() }} Data)</h6>
-        <button type="button" class="btn btn-sm btn-dark btn-print" onclick="window.print()">
-            <i class="bi bi-printer me-1"></i> Cetak Dokumen Rekap
-        </button>
+        <a href="{{ route('admin.reports.recap.preview', request()->query()) }}" class="btn btn-sm btn-dark btn-print">
+            <i class="bi bi-file-earmark-pdf-fill me-1"></i> Preview PDF
+        </a>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">

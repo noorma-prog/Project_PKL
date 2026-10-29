@@ -61,16 +61,27 @@
         }
 
         .sidebar-brand .logo-icon {
-            width: 42px;
-            height: 42px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid #fbbf24;
-            border-radius: 10px;
+            width: 46px;
+            height: 46px;
+            min-width: 46px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #fbbf24;
-            font-size: 1.4rem;
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            overflow: visible;
+            flex-shrink: 0;
+            padding: 0;
+        }
+
+        .sidebar-brand .logo-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            filter: none;
+            background: transparent;
         }
 
         .sidebar-brand .brand-text {
@@ -259,7 +270,7 @@
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
             <div class="logo-icon">
-                <i class="bi bi-shield-lock-fill"></i>
+                <img src="{{ asset('images/logo LAYANIT.png') }}" alt="Logo LayanIT" title="LayanIT">
             </div>
             <div class="brand-text">
                 <div class="brand-title">LayanIT</div>
