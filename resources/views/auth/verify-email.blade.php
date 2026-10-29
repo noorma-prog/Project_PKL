@@ -11,6 +11,10 @@
     <p class="text-muted small">
         Verifikasi alamat email diperlukan sebelum Anda dapat menggunakan akun. Jika belum menerima tautan, Anda dapat meminta pengiriman ulang.
     </p>
+    <p class="small mb-0">
+        Tautan verifikasi dikirim ke <strong>{{ auth()->user()->email }}</strong>.
+        Periksa juga folder Spam atau Promosi.
+    </p>
 </div>
 
 @if(session('success'))

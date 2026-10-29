@@ -754,6 +754,22 @@ class LayanItWorkflowTest extends TestCase
         Notification::assertSentTo($user, VerifyEmail::class);
     }
 
+    public function test_verification_notice_shows_the_account_email_destination(): void
+    {
+        $unverifiedUser = User::factory()->create([
+            'email' => 'pending-verification@example.test',
+            'role' => User::ROLE_USER,
+            'email_verified_at' => null,
+            'requires_email_verification' => true,
+        ]);
+
+        $this->actingAs($unverifiedUser)
+            ->get(route('verification.notice'))
+            ->assertOk()
+            ->assertSee('pending-verification@example.test')
+            ->assertSee('folder Spam atau Promosi');
+    }
+
     public function test_public_registration_rejects_any_submitted_role(): void
     {
         foreach ([User::ROLE_ADMIN, User::ROLE_PADAL, User::ROLE_TEKNISI] as $role) {
