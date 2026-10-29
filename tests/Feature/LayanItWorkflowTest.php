@@ -535,6 +535,33 @@ class LayanItWorkflowTest extends TestCase
         $this->actingAs($this->teknisi)->get(route('user.tickets.index'))->assertForbidden();
     }
 
+    public function test_padal_dashboard_creates_a_default_unit_when_account_has_none(): void
+    {
+        Padal::where('user_id', $this->padal->id)->delete();
+
+        $this->actingAs($this->padal)
+            ->get(route('padal.dashboard'))
+            ->assertOk();
+
+        $this->assertDatabaseHas('padals', [
+            'user_id' => $this->padal->id,
+            'nama_padal' => 'Unit Padal - '.$this->padal->name,
+            'status' => 'aktif',
+        ]);
+    }
+
+    public function test_padal_with_an_inactive_unit_receives_an_explanation_instead_of_not_found(): void
+    {
+        $this->padalUnit->update(['status' => 'nonaktif']);
+
+        $this->actingAs($this->padal)
+            ->get(route('padal.dashboard'))
+            ->assertForbidden()
+            ->assertSee('Unit Padal Anda tidak aktif.');
+
+        $this->assertDatabaseCount('padals', 1);
+    }
+
     public function test_admin_can_change_own_email_and_profile_then_verify_new_address(): void
     {
         Notification::fake();
@@ -1077,8 +1104,14 @@ class LayanItWorkflowTest extends TestCase
         $unlinkedPadal = $this->createUser(User::ROLE_PADAL, 'unlinked-padal');
         $this->actingAs($unlinkedPadal)
             ->get(route('padal.tickets.index'))
-            ->assertNotFound();
-        $this->assertDatabaseCount('padals', 2);
+            ->assertOk()
+            ->assertDontSee($ticket->ticket_number);
+        $this->assertDatabaseHas('padals', [
+            'user_id' => $unlinkedPadal->id,
+            'nama_padal' => 'Unit Padal - '.$unlinkedPadal->name,
+            'status' => 'aktif',
+        ]);
+        $this->assertDatabaseCount('padals', 3);
     }
 
     /**

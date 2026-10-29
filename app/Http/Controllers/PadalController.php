@@ -23,9 +23,23 @@ class PadalController extends Controller
      */
     private function getCurrentPadal(): Padal
     {
-        return Padal::where('user_id', Auth::id())
-            ->where('status', 'aktif')
-            ->firstOrFail();
+        return DB::transaction(function (): Padal {
+            $user = User::whereKey(Auth::id())->lockForUpdate()->firstOrFail();
+            $padal = Padal::where('user_id', $user->id)->orderBy('id')->first();
+
+            if ($padal) {
+                abort_unless($padal->status === 'aktif', 403, 'Unit Padal Anda tidak aktif. Hubungi Administrator.');
+
+                return $padal;
+            }
+
+            return Padal::create([
+                'user_id' => $user->id,
+                'nama_padal' => 'Unit Padal - '.$user->name,
+                'deskripsi' => 'Unit Padal awal untuk akun '.$user->name.'. Administrator dapat memperbarui detail unit.',
+                'status' => 'aktif',
+            ]);
+        });
     }
 
     /**
