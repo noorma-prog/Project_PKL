@@ -141,7 +141,7 @@
         </div>
 
         <h1>REKAPITULASI PENANGANAN LAPORAN GANGGUAN IT</h1>
-        <div class="meta">LayanIT &nbsp;•&nbsp; Periode: {{ $reportStart->translatedFormat('d') }}–{{ $reportEnd->translatedFormat('d F Y') }} &nbsp;•&nbsp; Dibuat: {{ $createdAt->translatedFormat('d F Y, H:i') }} WIB</div>
+        <div class="meta">LayanIT &nbsp;•&nbsp; Periode: {{ $reportStart->translatedFormat('d') }}–{{ $reportEnd->translatedFormat('d F Y') }} &nbsp;•&nbsp; Dibuat: {{ $createdAt->translatedFormat('d F Y, H:i') }} WITA</div>
 
         @if($isEmpty)
             <div class="no-data">Tidak ada laporan untuk periode ini.</div>
@@ -183,7 +183,8 @@
                             </td>
                             <td>
                                 {{ $ticket->title ?? '-' }}<br>
-                                <span class="muted">{{ $ticket->category?->name ?? '-' }}</span>
+                                <span class="muted">{{ $ticket->category?->name ?? '-' }}</span><br>
+                                <x-ticket-event-time :ticket="$ticket" />
                             </td>
                             <td>{{ $ticket->location ?? '-' }}</td>
                             <td>{{ $ticket->padal?->name ?? '-' }}</td>

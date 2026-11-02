@@ -33,9 +33,16 @@ class TeknisiController extends Controller
             ->take(5)
             ->get();
 
+        $scheduleTickets = (clone $ticketQuery)
+            ->with(['user', 'category', 'padal.leader'])
+            ->whereDate('event_date', '>=', now()->toDateString())
+            ->orderBySchedule()
+            ->take(5)
+            ->get();
+
         $myPadals = $technician->padalTeams()->with('leader')->get();
 
-        return view('teknisi.dashboard', compact('stats', 'recentAssignedTickets', 'myPadals'));
+        return view('teknisi.dashboard', compact('stats', 'recentAssignedTickets', 'scheduleTickets', 'myPadals'));
     }
 
     /**
@@ -69,8 +76,12 @@ class TeknisiController extends Controller
             });
         }
 
-        $tickets = $query->latest()->paginate(10)->withQueryString();
-        $categories = Category::where('is_active', true)->get();
+        $tickets = ($request->query('sort') === 'schedule'
+            ? $query->orderBySchedule()
+            : $query->orderBySubmission())
+            ->paginate(10)
+            ->withQueryString();
+        $categories = Category::orderBy('name')->get();
 
         return view('teknisi.tickets.index', compact('tickets', 'categories'));
     }

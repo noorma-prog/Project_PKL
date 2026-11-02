@@ -53,6 +53,28 @@ In order to ensure that the Laravel community is welcoming to all, please review
 
 If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
 
+## Production email verification
+
+Verification links are absolute signed URLs: their signature includes the URL scheme, host, path, expiry, and the application key. Production must use `APP_ENV=production`, `APP_DEBUG=false`, and `APP_URL=https://layanit.tesmagang.site`. Keep the existing `APP_KEY`; never regenerate it to fix a signature mismatch. The deployment script validates that the key exists but does not print or replace it.
+
+The application pins generated production URLs to `APP_URL` and HTTPS. The included Nginx deployment also passes `HTTPS on` to PHP-FPM. If another reverse proxy terminates TLS, configure `TRUSTED_PROXIES` in `.env` with only that proxy's actual IP address(es), and have it forward the original protocol and host. Do not trust all proxy addresses.
+
+After updating production settings or code, run as the application user:
+
+```bash
+cd /home/magang/layanit
+php artisan config:clear
+php artisan config:cache
+```
+
+Verification links are valid for 60 minutes (`auth.verification.expire`) and can be reissued from the verification page or the login page; resend requests are throttled. A valid link verifies the account and returns the user to login, while invalid or expired links retain signed-URL validation and show a resend option. Login checks the stored password hash and reports a role mismatch separately; public registration can only create reporter accounts. Confirm delivery and the complete registration-to-verification flow with a mailbox you control after deployment.
+
+## Ticket categories and activity schedules
+
+Reporters enter a free-text issue category; the submitted category is stored as a category record and linked to the ticket. Admin category CRUD routes are disabled while existing category/ticket records remain intact. Each ticket also stores the requested activity date and start/end times separately from its automatically generated submission timestamps. Old tickets keep nullable schedule fields.
+
+Ticket lists and the admin recap can be sorted independently by nearest activity or newest submission, with stable database ordering for equal submission times. App and MySQL/MariaDB connection defaults use `Asia/Makassar` / `+08:00`; deployment applies the additive ticket schedule migration with `php artisan migrate --force`.
+
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).

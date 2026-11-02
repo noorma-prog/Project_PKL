@@ -32,6 +32,10 @@ Route::middleware('guest')->group(function () {
     Route::post('/register', [AuthController::class, 'register'])->name('register.post');
 });
 
+Route::post('/email/verification-resend', [AuthController::class, 'resendVerificationEmail'])
+    ->middleware('throttle:6,1')
+    ->name('verification.resend.public');
+
 Route::get('/password/reset/{token}', [PasswordSetupController::class, 'show'])
     ->name('password.reset');
 Route::post('/password/reset', [PasswordSetupController::class, 'update'])
@@ -43,41 +47,35 @@ Route::get('/email/verify', function () {
 })->middleware('auth')->name('verification.notice');
 
 Route::get('/email/verify/{id}/{hash}', function (Request $request, $id, $hash) {
-    $user = User::findOrFail($id);
-    abort_unless(hash_equals(sha1($user->getEmailForVerification()), $hash), 403);
+    $user = User::find($id);
 
-    if (!$user->hasVerifiedEmail()) {
+    if (!$user || !hash_equals(sha1($user->getEmailForVerification()), $hash)) {
+        return redirect()->route('login')->with(
+            'error',
+            'Tautan verifikasi tidak valid. Minta tautan baru melalui formulir di halaman ini.'
+        );
+    }
+
+    $alreadyVerified = $user->hasVerifiedEmail();
+
+    if (!$alreadyVerified) {
         $user->markEmailAsVerified();
-        $user->save();
     }
 
-    $user->requires_email_verification = false;
-    $user->save();
-
-    if (Auth::id() === $user->id) {
-        if (!$user->is_active || (in_array($user->role, [User::ROLE_PADAL, User::ROLE_TEKNISI], true)
-            && !$user->isApprovalActive())) {
-            Auth::logout();
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
-
-            return redirect()->route('login')->with(
-                'error',
-                'Email berhasil diverifikasi, tetapi akun belum aktif. Hubungi Administrator.'
-            );
-        }
-
-        $destination = match ($user->role) {
-            User::ROLE_ADMIN => 'admin.dashboard',
-            User::ROLE_PADAL => 'padal.dashboard',
-            User::ROLE_TEKNISI => 'teknisi.dashboard',
-            default => 'user.dashboard',
-        };
-
-        return redirect()->route($destination)->with('success', 'Email berhasil diverifikasi.');
+    if ($user->requiresEmailVerification()) {
+        $user->forceFill(['requires_email_verification' => false])->save();
     }
 
-    return redirect()->route('login')->with('success', 'Email berhasil diverifikasi. Silakan login kembali.');
+    Auth::logout();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+
+    return redirect()->route('login')->with(
+        'success',
+        $alreadyVerified
+            ? 'Email ini sudah terverifikasi. Silakan masuk menggunakan email dan kata sandi Anda.'
+            : 'Email berhasil diverifikasi. Silakan masuk menggunakan email dan kata sandi yang telah Anda daftarkan.'
+    );
 })->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
 
 Route::post('/email/verification-notification', function (Request $request) {
@@ -145,11 +143,6 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::patch('/users/{id}/status', [AdminController::class, 'toggleUserStatus'])->name('users.toggle-status');
     Route::delete('/users/{id}', [AdminController::class, 'destroyUser'])->name('users.destroy');
 
-    // Mengelola Kategori Gangguan (CRUD)
-    Route::get('/categories', [AdminController::class, 'categories'])->name('categories.index');
-    Route::post('/categories', [AdminController::class, 'storeCategory'])->name('categories.store');
-    Route::put('/categories/{id}', [AdminController::class, 'updateCategory'])->name('categories.update');
-    Route::delete('/categories/{id}', [AdminController::class, 'destroyCategory'])->name('categories.destroy');
 
     // Mengelola Padal (CRUD)
     Route::get('/padals', [AdminController::class, 'padals'])->name('padals.index');

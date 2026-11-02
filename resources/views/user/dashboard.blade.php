@@ -5,6 +5,7 @@
 @section('page_subtitle', 'Selamat datang di Sistem Helpdesk LayanIT POLDA')
 
 @section('content')
+<x-ticket-schedule-list :tickets="$scheduleTickets" show-route="user.tickets.show" />
 <!-- Peringatan jika ada laporan yang selesai dan belum dinilai -->
 @if($unratedTickets->isNotEmpty())
     <div class="alert alert-warning border-warning shadow-sm mb-4" role="alert">
@@ -128,7 +129,8 @@
                                 </small>
                             </td>
                             <td>
-                                <span class="badge bg-light text-dark border">{{ $ticket->category->name }}</span>
+                                <span class="badge bg-light text-dark border">{{ $ticket->category?->name ?? '-' }}</span>
+                                <x-ticket-schedule :ticket="$ticket" />
                             </td>
                             <td><small class="text-secondary">{{ $ticket->location }}</small></td>
                             <td>

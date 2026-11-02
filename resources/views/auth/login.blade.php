@@ -20,7 +20,7 @@
             <option value="teknisi" {{ old('account_type') === 'teknisi' ? 'selected' : '' }}>Teknisi</option>
             <option value="user" {{ old('account_type') === 'user' ? 'selected' : '' }}>User/Pelapor</option>
         </select>
-        <div class="form-text small">Pilihan ini hanya untuk memilih jenis akses; hak akses tetap diverifikasi dari database.</div>
+        <div class="form-text small">Hak akses tetap dicocokkan dengan jenis akun yang tersimpan.</div>
         @error('account_type')
             <div class="text-danger small mt-1">{{ $message }}</div>
         @enderror
@@ -31,7 +31,7 @@
         <div class="input-group">
             <span class="input-group-text bg-light border-end-0 text-secondary"><i class="bi bi-envelope"></i></span>
             <input type="email" name="email" id="email" class="form-control border-start-0 @error('email') is-invalid @enderror" 
-                   value="" placeholder="contoh: nama@polda.go.id" autocomplete="off" required autofocus>
+                   value="{{ old('email') }}" placeholder="contoh: nama@polda.go.id" autocomplete="username" required autofocus>
         </div>
         @error('email')
             <div class="text-danger small mt-1">{{ $message }}</div>
@@ -65,6 +65,23 @@
         <i class="bi bi-box-arrow-in-right me-2"></i> Masuk Sekarang
     </button>
 </form>
+
+<div class="border-top pt-3 mt-2" id="resend-verification">
+    <p class="small text-muted mb-2">Belum menerima tautan verifikasi atau tautan sudah kedaluwarsa?</p>
+    <form action="{{ route('verification.resend.public') }}" method="POST">
+        @csrf
+        <label for="verification_email" class="form-label small fw-semibold text-secondary">Email yang didaftarkan</label>
+        <div class="input-group">
+            <input type="email" name="verification_email" id="verification_email"
+                   class="form-control @error('verification_email') is-invalid @enderror"
+                   value="{{ old('verification_email', old('email')) }}" autocomplete="email" required>
+            <button type="submit" class="btn btn-outline-primary">Kirim ulang</button>
+        </div>
+        @error('verification_email')
+            <div class="text-danger small mt-1">{{ $message }}</div>
+        @enderror
+    </form>
+</div>
 
 <div class="text-center">
     <span class="text-muted small">Belum memiliki akun pelapor?</span>

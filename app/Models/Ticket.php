@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Carbon;
 
 class Ticket extends Model
 {
@@ -17,11 +19,17 @@ class Ticket extends Model
 
     // Daftar status laporan LayanIT
     public const STATUS_MENUNGGU_VERIFIKASI = 'menunggu_verifikasi';
+
     public const STATUS_DITOLAK_ADMIN = 'ditolak_admin';
+
     public const STATUS_MENUNGGU_KONFIRMASI_PADAL = 'menunggu_konfirmasi_padal';
+
     public const STATUS_DITOLAK_PADAL = 'ditolak_padal';
+
     public const STATUS_DALAM_PENANGANAN = 'dalam_penanganan';
+
     public const STATUS_SELESAI = 'selesai';
+
     public const STATUS_SELESAI_DINILAI = 'selesai_dinilai';
 
     protected $fillable = [
@@ -32,7 +40,10 @@ class Ticket extends Model
         'diperiksa_oleh',        // diperiksa_oleh (admin)
         'ditugaskan_oleh',       // ditugaskan_oleh (admin)
         'title',                 // judul
-        'location',              // lokasi
+        'location',
+        'event_date',
+        'event_start_time',
+        'event_end_time',              // lokasi
         'description',           // deskripsi
         'status',                // status
         'rejection_reason',      // alasan_penolakan
@@ -49,11 +60,45 @@ class Ticket extends Model
     protected function casts(): array
     {
         return [
+            'event_date' => 'date',
             'verified_at' => 'datetime',
             'assigned_at' => 'datetime',
             'started_at' => 'datetime',
             'completed_at' => 'datetime',
         ];
+    }
+
+    public function scopeOrderBySchedule(Builder $query): Builder
+    {
+        return $query
+            ->orderByRaw('event_date IS NULL')
+            ->orderBy('event_date')
+            ->orderByRaw('event_start_time IS NULL')
+            ->orderBy('event_start_time')
+            ->orderBy('id');
+    }
+
+    public function scopeOrderBySubmission(Builder $query): Builder
+    {
+        return $query->orderByDesc('created_at')->orderByDesc('id');
+    }
+
+    public function getScheduleStatusAttribute(): string
+    {
+        if (! $this->event_date || ! $this->event_start_time || ! $this->event_end_time) {
+            return 'Belum dijadwalkan';
+        }
+
+        $endsAt = Carbon::parse(
+            $this->event_date->format('Y-m-d').' '.$this->event_end_time,
+            config('app.timezone')
+        );
+
+        if ($endsAt->isPast()) {
+            return 'Jadwal sudah lewat';
+        }
+
+        return $this->event_date->isToday() ? 'Jadwal hari ini' : 'Jadwal akan datang';
     }
 
     /**

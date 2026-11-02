@@ -11,6 +11,7 @@ use App\Models\TicketStatusHistory;
 use App\Models\TicketTechnicianAssignment;
 use App\Models\User;
 use App\Notifications\AccountActivationNotification;
+use App\Providers\AppServiceProvider;
 use App\Services\EmailVerificationSender;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Application;
@@ -180,6 +181,21 @@ class LayanItWorkflowTest extends TestCase
         $response->assertRedirect(route('login'));
         $response->assertSessionHasErrors('account_type');
         $this->assertGuest();
+
+        $unverified = User::factory()->create([
+            'email' => 'unverified-role-mismatch@polda.go.id',
+            'role' => User::ROLE_USER,
+            'requires_email_verification' => true,
+            'email_verified_at' => null,
+        ]);
+
+        $this->from(route('login'))->post(route('login.post'), [
+            'account_type' => User::ROLE_ADMIN,
+            'email' => $unverified->email,
+            'password' => 'password',
+        ])->assertRedirect(route('login'))
+            ->assertSessionHasErrors('account_type');
+        $this->assertGuest();
     }
 
     public function test_admin_can_create_and_manage_staff_accounts_with_activation_required(): void
@@ -246,58 +262,15 @@ class LayanItWorkflowTest extends TestCase
         $this->assertFalse($managedUser->is_active);
     }
 
-    public function test_admin_can_manage_categories_and_delete_unused_category(): void
+    public function test_admin_category_management_routes_are_disabled(): void
     {
-        $this->actingAs($this->admin);
-
-        $this->post(route('admin.categories.store'), [
-            'name' => 'Gangguan Jaringan Uji',
-            'icon' => 'bi-wifi',
-            'description' => 'Gangguan jaringan untuk pengujian.',
-        ])->assertRedirect()
-            ->assertSessionHas('success');
-
-        $category = Category::where('name', 'Gangguan Jaringan Uji')->firstOrFail();
-        $this->assertSame('bi-wifi', $category->icon);
-        $this->assertSame('gangguan-jaringan-uji', $category->slug);
-        $this->assertTrue($category->is_active);
-
-        $this->get(route('admin.categories.index'))
-            ->assertOk()
-            ->assertSee('Gangguan Jaringan Uji')
-            ->assertSee('Gangguan jaringan untuk pengujian.')
-            ->assertSee('0 Laporan')
-            ->assertSee('Hapus Gangguan Jaringan Uji')
-            ->assertSee('2 Kategori');
-
-        $this->put(route('admin.categories.update', $category->id), [
-            'name' => 'Gangguan Jaringan Gedung',
-            'icon' => 'bi-router',
-            'description' => 'Deskripsi diperbarui.',
-            'is_active' => 1,
-        ])->assertRedirect()
-            ->assertSessionHas('success');
-
-        $this->assertDatabaseHas('categories', [
-            'id' => $category->id,
-            'name' => 'Gangguan Jaringan Gedung',
-            'slug' => 'gangguan-jaringan-gedung',
-            'icon' => 'bi-router',
-            'description' => 'Deskripsi diperbarui.',
-            'is_active' => true,
-        ]);
-
-        $this->delete(route('admin.categories.destroy', $category->id))
-            ->assertRedirect()
-            ->assertSessionHas('success');
-        $this->assertDatabaseMissing('categories', ['id' => $category->id]);
-        $this->get(route('admin.categories.index'))
-            ->assertOk()
-            ->assertDontSee('Gangguan Jaringan Gedung')
-            ->assertSee('1 Kategori');
+        $this->assertFalse(\Illuminate\Support\Facades\Route::has('admin.categories.index'));
+        $this->assertFalse(\Illuminate\Support\Facades\Route::has('admin.categories.store'));
+        $this->assertFalse(\Illuminate\Support\Facades\Route::has('admin.categories.update'));
+        $this->assertFalse(\Illuminate\Support\Facades\Route::has('admin.categories.destroy'));
     }
 
-    public function test_category_delete_is_blocked_without_changing_ticket_history_or_rating(): void
+    public function test_manual_category_remains_attached_to_ticket_history_and_rating(): void
     {
         $ticket = Ticket::create([
             'ticket_number' => 'TKT-' . date('Ymd') . '-CATEGORY',
@@ -323,29 +296,13 @@ class LayanItWorkflowTest extends TestCase
             'review' => 'Penanganan baik.',
         ]);
 
-        $this->actingAs($this->admin)
-            ->delete(route('admin.categories.destroy', $this->category->id))
-            ->assertRedirect()
-            ->assertSessionHas('error');
-
         $this->assertDatabaseHas('categories', ['id' => $this->category->id]);
         $this->assertDatabaseHas('tickets', ['id' => $ticket->id, 'category_id' => $this->category->id]);
         $this->assertDatabaseHas('ticket_status_histories', ['id' => $history->id, 'ticket_id' => $ticket->id]);
         $this->assertDatabaseHas('ticket_ratings', ['id' => $rating->id, 'ticket_id' => $ticket->id]);
     }
 
-    public function test_only_admin_can_delete_categories(): void
-    {
-        foreach ([$this->user, $this->padal, $this->teknisi] as $actor) {
-            $this->actingAs($actor)
-                ->delete(route('admin.categories.destroy', $this->category->id))
-                ->assertForbidden();
-        }
-
-        $this->assertDatabaseHas('categories', ['id' => $this->category->id]);
-    }
-
-    public function test_inactive_category_cannot_be_used_for_new_ticket(): void
+    public function test_user_can_submit_manual_category_matching_an_inactive_legacy_category(): void
     {
         $category = Category::create([
             'name' => 'Kategori Nonaktif Uji',
@@ -357,14 +314,24 @@ class LayanItWorkflowTest extends TestCase
 
         $this->actingAs($this->user)
             ->post(route('user.tickets.store'), [
-                'category_id' => $category->id,
+                    'category' => $category->name,
                 'title' => 'Laporan kategori nonaktif',
                 'location' => 'Ruang Uji',
-                'description' => 'Request langsung mencoba memakai kategori nonaktif.',
+                    'event_date' => '2026-11-05',
+                    'event_start_time' => '13:00',
+                    'event_end_time' => '15:00',
+                    'description' => 'Request langsung mencoba memakai kategori nonaktif.',
             ])
-            ->assertSessionHasErrors('category_id');
+            ->assertSessionHas('success');
 
-        $this->assertDatabaseMissing('tickets', ['title' => 'Laporan kategori nonaktif']);
+            $this->assertDatabaseHas('tickets', [
+                'title' => 'Laporan kategori nonaktif',
+                'category_id' => $category->id,
+            ]);
+            $this->assertSame(
+                '2026-11-05',
+                Ticket::where('title', 'Laporan kategori nonaktif')->firstOrFail()->event_date->format('Y-m-d')
+            );
     }
 
     public function test_dashboard_stat_cards_link_to_role_scoped_lists_and_apply_status_filters(): void
@@ -615,13 +582,15 @@ class LayanItWorkflowTest extends TestCase
             now()->addMinutes(30),
             ['id' => $this->admin->id, 'hash' => sha1($this->admin->getEmailForVerification())]
         );
-        $this->get($verificationUrl)->assertRedirect(route('admin.dashboard'));
+        $this->get($verificationUrl)
+            ->assertRedirect(route('login'))
+            ->assertSessionHas('success', 'Email berhasil diverifikasi. Silakan masuk menggunakan email dan kata sandi yang telah Anda daftarkan.');
+        $this->assertGuest();
 
         $this->admin->refresh();
         $this->assertTrue($this->admin->hasVerifiedEmail());
         $this->assertFalse($this->admin->requiresEmailVerification());
 
-        $this->post(route('logout'));
         $this->post(route('login.post'), [
             'account_type' => User::ROLE_ADMIN,
             'email' => 'admin-updated@example.test',
@@ -778,7 +747,116 @@ class LayanItWorkflowTest extends TestCase
         $this->assertTrue($user->is_active);
         $this->assertNull($user->email_verified_at);
         $this->assertTrue($user->requiresEmailVerification());
+        $this->assertTrue(Hash::check('password123', $user->password));
         Notification::assertSentTo($user, VerifyEmail::class);
+    }
+
+    public function test_verification_url_from_registration_email_verifies_the_account(): void
+    {
+        config([
+            'app.env' => 'production',
+            'app.url' => 'https://layanit.tesmagang.site',
+        ]);
+        (new AppServiceProvider(app()))->boot();
+
+        Notification::fake();
+        $email = 'register-email-link@polda.go.id';
+
+        $this->post(route('register.post'), [
+            'name' => 'Pendaftar Verifikasi',
+            'email' => $email,
+            'nrp_nip' => '99012',
+            'satuan_kerja' => 'Bid TIK',
+            'phone_number' => '0812345002',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ])->assertRedirect(route('verification.notice'));
+
+        $user = User::where('email', $email)->firstOrFail();
+        $verificationUrl = null;
+
+        Notification::assertSentTo(
+            $user,
+            VerifyEmail::class,
+            function (VerifyEmail $notification) use ($user, &$verificationUrl): bool {
+                $verificationUrl = $notification->toMail($user)->actionUrl;
+
+                return true;
+            }
+        );
+
+        $this->assertIsString($verificationUrl);
+        $url = parse_url($verificationUrl);
+        $this->assertIsArray($url);
+        $this->assertSame('https', $url['scheme']);
+        $this->assertSame('layanit.tesmagang.site', $url['host']);
+        $this->assertSame('/email/verify/'.$user->id.'/'.sha1($user->getEmailForVerification()), $url['path']);
+
+        parse_str($url['query'] ?? '', $query);
+        $this->assertArrayHasKey('expires', $query);
+        $this->assertArrayHasKey('signature', $query);
+
+        $this->get($verificationUrl)
+            ->assertRedirect(route('login'))
+            ->assertSessionHas('success', 'Email berhasil diverifikasi. Silakan masuk menggunakan email dan kata sandi yang telah Anda daftarkan.');
+        $this->assertNotNull($user->fresh()->email_verified_at);
+        $this->assertFalse((bool) $user->fresh()->requires_email_verification);
+
+        $this->post(route('login.post'), [
+            'account_type' => User::ROLE_USER,
+            'email' => $email,
+            'password' => 'password123',
+        ])->assertRedirect(route('user.dashboard'));
+        $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_ticket_lists_sort_schedule_and_submission_separately(): void
+    {
+        $submittedAt = now()->subHour();
+        $earlierSchedule = Ticket::create([
+            'ticket_number' => 'TKT-SCHEDULE-ORDER-A',
+            'user_id' => $this->user->id,
+            'category_id' => $this->category->id,
+            'title' => 'Kegiatan Senin',
+            'location' => 'Ruang A',
+            'description' => 'Jadwal lebih awal.',
+            'event_date' => now()->addDay()->toDateString(),
+            'event_start_time' => '09:00',
+            'event_end_time' => '11:00',
+            'status' => Ticket::STATUS_MENUNGGU_VERIFIKASI,
+        ]);
+        $earlierSchedule->forceFill(['created_at' => $submittedAt])->save();
+
+        $laterSchedule = Ticket::create([
+            'ticket_number' => 'TKT-SCHEDULE-ORDER-B',
+            'user_id' => $this->user->id,
+            'category_id' => $this->category->id,
+            'title' => 'Kegiatan Kamis',
+            'location' => 'Ruang B',
+            'description' => 'Jadwal lebih akhir.',
+            'event_date' => now()->addDays(4)->toDateString(),
+            'event_start_time' => '13:00',
+            'event_end_time' => '15:00',
+            'status' => Ticket::STATUS_MENUNGGU_VERIFIKASI,
+        ]);
+        $laterSchedule->forceFill(['created_at' => $submittedAt])->save();
+
+        $this->assertSame('Asia/Makassar', config('app.timezone'));
+        $this->assertSame('09:00', substr($earlierSchedule->fresh()->event_start_time, 0, 5));
+
+        $this->actingAs($this->user)
+            ->get(route('user.tickets.index', ['sort' => 'schedule']))
+            ->assertOk()
+            ->assertSeeInOrder([$earlierSchedule->ticket_number, $laterSchedule->ticket_number]);
+
+        $this->get(route('user.tickets.index', ['sort' => 'submission']))
+            ->assertOk()
+            ->assertSeeInOrder([$laterSchedule->ticket_number, $earlierSchedule->ticket_number]);
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.reports.recap', ['sort' => 'schedule']))
+            ->assertOk()
+            ->assertSeeInOrder([$earlierSchedule->ticket_number, $laterSchedule->ticket_number]);
     }
 
     public function test_verification_notice_shows_the_account_email_destination(): void
@@ -835,12 +913,20 @@ class LayanItWorkflowTest extends TestCase
         );
 
         $response = $this->get($url);
-        $response->assertRedirect(route('user.dashboard'));
+        $response->assertRedirect(route('login'))
+            ->assertSessionHas('success', 'Email berhasil diverifikasi. Silakan masuk menggunakan email dan kata sandi yang telah Anda daftarkan.');
+        $this->assertGuest();
 
         $user->refresh();
         $this->assertNotNull($user->email_verified_at);
         $this->assertFalse((bool) $user->requires_email_verification);
         $this->assertSame(User::APPROVAL_ACTIVE, $user->approval_status);
+
+        $verifiedAt = $user->email_verified_at->toISOString();
+        $this->get($url)->assertRedirect(route('login'))
+            ->assertSessionHas('success', 'Email ini sudah terverifikasi. Silakan masuk menggunakan email dan kata sandi Anda.');
+
+        $this->assertSame($verifiedAt, $user->fresh()->email_verified_at->toISOString());
     }
 
     public function test_verification_link_rejects_invalid_and_expired_signatures(): void
@@ -856,16 +942,39 @@ class LayanItWorkflowTest extends TestCase
         ];
 
         $unsignedUrl = route('verification.verify', $parameters);
-        $this->get($unsignedUrl)->assertForbidden();
+        $this->get($unsignedUrl)
+            ->assertRedirect(route('login'))
+            ->assertSessionHas('error', 'Tautan verifikasi tidak valid atau telah kedaluwarsa. Minta tautan baru melalui formulir di halaman ini.');
 
         $expiredUrl = URL::temporarySignedRoute(
             'verification.verify',
             now()->subMinute(),
             $parameters
         );
-        $this->get($expiredUrl)->assertForbidden();
+        $this->get($expiredUrl)
+            ->assertRedirect(route('login'))
+            ->assertSessionHas('error', 'Tautan verifikasi tidak valid atau telah kedaluwarsa. Minta tautan baru melalui formulir di halaman ini.');
 
         $this->assertNull($user->fresh()->email_verified_at);
+    }
+
+    public function test_public_resend_sends_a_new_link_without_authenticating_user(): void
+    {
+        Notification::fake();
+        $user = User::factory()->create([
+            'email' => 'public-resend@polda.go.id',
+            'role' => User::ROLE_USER,
+            'requires_email_verification' => true,
+            'email_verified_at' => null,
+        ]);
+
+        $this->post(route('verification.resend.public'), [
+            'verification_email' => $user->email,
+        ])->assertRedirect(route('login'))
+            ->assertSessionHas('success', 'Jika email terdaftar dan membutuhkan verifikasi, tautan verifikasi baru akan dikirim.');
+
+        Notification::assertSentTo($user, VerifyEmail::class);
+        $this->assertGuest();
     }
 
     public function test_unverified_user_cannot_access_reporting_features(): void
@@ -936,6 +1045,10 @@ class LayanItWorkflowTest extends TestCase
         ]);
         $response->assertRedirect(route('verification.notice'));
         $this->assertAuthenticatedAs($unverified);
+        $this->get(route('verification.notice'))
+            ->assertOk()
+            ->assertSee('Verifikasi alamat email Anda terlebih dahulu')
+            ->assertSee('Kirim Ulang Tautan Verifikasi');
         Auth::logout();
 
         $pendingPadal = User::factory()->create([
@@ -1120,9 +1233,12 @@ class LayanItWorkflowTest extends TestCase
     public function test_user_can_create_ticket(): void
     {
         $response = $this->actingAs($this->user)->post(route('user.tickets.store'), [
-            'category_id' => $this->category->id,
+            'category' => 'Kerusakan Komputer',
             'title' => 'Komputer PC SPKT Tidak Bisa Nyala',
             'location' => 'Ruang Pelayanan SPKT Lantai 1',
+            'event_date' => now()->addDays(3)->toDateString(),
+            'event_start_time' => '09:00',
+            'event_end_time' => '11:00',
             'description' => 'Saat tombol power ditekan, lampu indikator mati dan kipas tidak berputar.',
         ]);
 
@@ -1132,6 +1248,10 @@ class LayanItWorkflowTest extends TestCase
             'title' => 'Komputer PC SPKT Tidak Bisa Nyala',
             'status' => Ticket::STATUS_MENUNGGU_VERIFIKASI,
         ]);
+        $ticket = Ticket::where('title', 'Komputer PC SPKT Tidak Bisa Nyala')->firstOrFail();
+        $this->assertSame('Kerusakan Komputer', $ticket->category->name);
+        $this->assertSame('09:00', substr($ticket->event_start_time, 0, 5));
+        $this->assertSame('11:00', substr($ticket->event_end_time, 0, 5));
     }
 
     /**
@@ -1261,9 +1381,12 @@ class LayanItWorkflowTest extends TestCase
         $this->assertFalse($this->user->hasUnratedCompletedTickets());
 
         $newTicketResponse = $this->actingAs($this->user)->post(route('user.tickets.store'), [
-            'category_id' => $this->category->id,
+            'category' => 'Gangguan Jaringan Internet',
             'title' => 'Laporan Baru Setelah Rating Selesai',
             'location' => 'Ruang SPKT Lantai 1',
+            'event_date' => now()->addDays(4)->toDateString(),
+            'event_start_time' => '13:00',
+            'event_end_time' => '15:00',
             'description' => 'Kini pelapor dapat membuat laporan baru dengan sukses.',
         ]);
         $newTicketResponse->assertSessionHas('success');

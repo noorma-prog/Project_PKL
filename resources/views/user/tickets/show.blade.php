@@ -153,8 +153,9 @@
             </div>
             <div class="card-body p-4">
                 <div class="mb-3">
-                    <span class="badge bg-light text-dark border mb-1">{{ $ticket->category->name }}</span>
+                    <span class="badge bg-light text-dark border mb-1">{{ $ticket->category?->name ?? '-' }}</span>
                     <h4 class="fw-bold text-dark">{{ $ticket->title }}</h4>
+                    <x-ticket-schedule :ticket="$ticket" />
                 </div>
 
                 <div class="row g-3 p-3 bg-light rounded-3 mb-4">
@@ -168,11 +169,11 @@
                     </div>
                     <div class="col-sm-6">
                         <small class="text-muted d-block">Waktu Dilaporkan</small>
-                        <span class="text-dark">{{ $ticket->created_at->format('d F Y, H:i') }} WIB</span>
+                        <span class="text-dark">{{ $ticket->created_at->format('d F Y, H:i') }} WITA</span>
                     </div>
                     <div class="col-sm-6">
                         <small class="text-muted d-block">Waktu Selesai</small>
-                        <span class="text-dark">{{ $ticket->completed_at ? $ticket->completed_at->format('d F Y, H:i') . ' WIB' : '-' }}</span>
+                        <span class="text-dark">{{ $ticket->completed_at ? $ticket->completed_at->format('d F Y, H:i') . ' WITA' : '-' }}</span>
                     </div>
                 </div>
 

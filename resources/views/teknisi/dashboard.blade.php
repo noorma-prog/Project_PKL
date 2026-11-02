@@ -5,6 +5,7 @@
 @section('page_subtitle', 'Pantau penugasan penanganan teknis IT yang ditugaskan kepada Anda (Akses Read-Only)')
 
 @section('content')
+<x-ticket-schedule-list :tickets="$scheduleTickets" show-route="teknisi.tickets.show" />
 <div class="alert alert-info d-flex align-items-center mb-4 shadow-sm" role="alert">
     <i class="bi bi-info-circle-fill fs-4 me-3 text-info"></i>
     <div>
@@ -81,8 +82,9 @@
                                 <small class="text-muted">{{ $ticket->user->satuan_kerja }}</small>
                             </td>
                             <td>
-                                <span class="badge bg-light text-dark border mb-1">{{ $ticket->category->name }}</span>
+                                <span class="badge bg-light text-dark border mb-1">{{ $ticket->category?->name ?? '-' }}</span>
                                 <div class="fw-semibold text-dark">{{ $ticket->title }}</div>
+                                <x-ticket-schedule :ticket="$ticket" />
                             </td>
                             <td><strong class="text-secondary small">{{ $ticket->location }}</strong></td>
                             <td>

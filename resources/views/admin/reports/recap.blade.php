@@ -35,13 +35,14 @@
     <h4 class="fw-bold mb-0">KEPOLISIAN DAERAH (POLDA)</h4>
     <h5 class="fw-bold mb-1">BIDANG TEKNOLOGI INFORMASI DAN KOMUNIKASI</h5>
     <h6 class="text-uppercase text-secondary mb-0">REKAPITULASI PENANGANAN GANGGUAN IT - LAYANIT</h6>
-    <small class="text-muted">Dicetak pada: {{ date('d F Y, H:i') }} WIB</small>
+    <small class="text-muted">Dicetak pada: {{ date('d F Y, H:i') }} WITA</small>
 </div>
 
 <!-- Filter Card -->
 <div class="card shadow-sm border-0 mb-4 filter-card">
     <div class="card-body p-3">
         <form method="GET" action="{{ route('admin.reports.recap') }}" class="row g-2 align-items-end">
+            @include('components.ticket-sort-filter')
             <div class="col-md-3">
                 <label class="form-label small fw-semibold text-secondary">Dari Tanggal:</label>
                 <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}">
@@ -143,7 +144,8 @@
                             </td>
                             <td>
                                 <strong>{{ $ticket->title }}</strong><br>
-                                <small class="text-muted">{{ $ticket->category->name }}</small>
+                                <small class="text-muted">{{ $ticket->category?->name ?? '-' }}</small>
+                                <x-ticket-event-time :ticket="$ticket" />
                             </td>
                             <td>{{ $ticket->location }}</td>
                             <td>{{ $ticket->padal ? $ticket->padal->name : '-' }}</td>

@@ -127,9 +127,12 @@ class UserTicketRatingTest extends TestCase
 
         $this->actingAs($this->user)
             ->post(route('user.tickets.store'), [
-                'category_id' => $this->category->id,
+                'category' => 'Dukungan Kegiatan',
                 'title' => 'Laporan setelah rating',
                 'location' => 'Ruang uji',
+                'event_date' => now()->addDays(3)->toDateString(),
+                'event_start_time' => '09:00',
+                'event_end_time' => '11:00',
                 'description' => 'Laporan baru setelah rating sebelumnya berhasil disimpan.',
             ])
             ->assertRedirect();

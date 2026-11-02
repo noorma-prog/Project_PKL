@@ -41,7 +41,23 @@ if [[ ! -S /run/php/php8.4-fpm.sock ]]; then
     exit 1
 fi
 
-sed -i 's|^APP_URL=.*|APP_URL=https://layanit.tesmagang.site|' "$APP_DIR/.env"
+for key in APP_KEY APP_ENV APP_DEBUG APP_URL; do
+    if ! grep -q "^${key}=" "$APP_DIR/.env"; then
+        printf 'Required environment setting is missing: %s\n' "$key" >&2
+        exit 1
+    fi
+done
+
+if ! grep -Eq '^APP_KEY=.+$' "$APP_DIR/.env"; then
+    printf 'APP_KEY is empty; refusing to deploy without changing it.\n' >&2
+    exit 1
+fi
+
+sed -i \
+    -e 's|^APP_ENV=.*|APP_ENV=production|' \
+    -e 's|^APP_DEBUG=.*|APP_DEBUG=false|' \
+    -e 's|^APP_URL=.*|APP_URL=https://layanit.tesmagang.site|' \
+    "$APP_DIR/.env"
 chmod 711 /home/magang
 chgrp -R www-data "$APP_DIR/storage" "$APP_DIR/bootstrap/cache"
 chmod -R ug+rwX "$APP_DIR/storage" "$APP_DIR/bootstrap/cache"
@@ -51,7 +67,7 @@ chmod 640 "$APP_DIR/.env"
 chmod 2770 "$APP_DIR/database"
 chmod 660 "$APP_DIR/database/database.sqlite"
 
-runuser -u magang -- bash -c 'cd /home/magang/layanit && php artisan config:cache --no-ansi'
+runuser -u magang -- bash -c 'cd /home/magang/layanit && php artisan config:clear --no-ansi && php artisan config:cache --no-ansi'
 
 tmp_site=$(mktemp /etc/nginx/sites-available/.layanit.XXXXXX)
 trap 'rm -f "$tmp_site"' EXIT

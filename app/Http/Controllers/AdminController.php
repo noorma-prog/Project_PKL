@@ -64,21 +64,28 @@ class AdminController extends Controller
         $pendingVerificationCount = $stats['menunggu_verifikasi'];
         $pendingVerificationTickets = Ticket::with(['user', 'category'])
             ->where('status', Ticket::STATUS_MENUNGGU_VERIFIKASI)
-            ->latest()
+            ->orderBySubmission()
             ->take(5)
             ->get();
 
         // Laporan terbaru
         $recentTickets = Ticket::with(['user', 'category', 'padal.leader', 'technicians'])
-            ->latest()
+            ->orderBySubmission()
             ->take(8)
+            ->get();
+
+        $scheduleTickets = Ticket::with(['user', 'category', 'padal.leader'])
+            ->whereDate('event_date', '>=', now()->toDateString())
+            ->orderBySchedule()
+            ->take(5)
             ->get();
 
         return view('admin.dashboard', compact(
             'stats',
             'pendingVerificationCount',
             'pendingVerificationTickets',
-            'recentTickets'
+            'recentTickets',
+            'scheduleTickets'
         ));
     }
 
@@ -116,8 +123,12 @@ class AdminController extends Controller
             });
         }
 
-        $tickets = $query->latest()->paginate(10)->withQueryString();
-        $categories = Category::where('is_active', true)->get();
+        $tickets = ($request->query('sort') === 'schedule'
+            ? $query->orderBySchedule()
+            : $query->orderBySubmission())
+            ->paginate(10)
+            ->withQueryString();
+        $categories = Category::orderBy('name')->get();
         $padals = $this->availablePadals()->with('leader')->get();
 
         return view('admin.tickets.index', compact('tickets', 'categories', 'padals'));
@@ -814,7 +825,9 @@ class AdminController extends Controller
             $query->where('padal_id', $request->padal_id);
         }
 
-        $tickets = $query->latest()->get();
+        $tickets = $request->query('sort') === 'schedule'
+            ? $query->orderBySchedule()->get()
+            : $query->orderBySubmission()->get();
 
         return [
             'tickets' => $tickets,

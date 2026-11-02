@@ -76,9 +76,16 @@ class PadalController extends Controller
             ->take(5)
             ->get();
 
+        $scheduleTickets = Ticket::with(['user', 'category'])
+            ->where('padal_id', $padal->id)
+            ->whereDate('event_date', '>=', now()->toDateString())
+            ->orderBySchedule()
+            ->take(5)
+            ->get();
+
         $members = $padal->members()->orderBy('name')->get();
 
-        return view('padal.dashboard', compact('stats', 'pendingTickets', 'activeTickets', 'padal', 'members'));
+        return view('padal.dashboard', compact('stats', 'pendingTickets', 'activeTickets', 'scheduleTickets', 'padal', 'members'));
     }
 
     /**
@@ -113,8 +120,12 @@ class PadalController extends Controller
             });
         }
 
-        $tickets = $query->latest()->paginate(10)->withQueryString();
-        $categories = Category::where('is_active', true)->get();
+        $tickets = ($request->query('sort') === 'schedule'
+            ? $query->orderBySchedule()
+            : $query->orderBySubmission())
+            ->paginate(10)
+            ->withQueryString();
+        $categories = Category::orderBy('name')->get();
 
         return view('padal.tickets.index', compact('tickets', 'categories', 'padal'));
     }

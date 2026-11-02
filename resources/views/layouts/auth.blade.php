@@ -121,6 +121,12 @@
             background: #e2e8f0;
             border-color: #94a3b8;
         }
+        .auth-body .form-control,
+        .auth-body .form-select,
+        .auth-body .btn {
+            min-height: 44px;
+        }
+
         @media (max-width: 576px) {
             body {
                 align-items: flex-start;

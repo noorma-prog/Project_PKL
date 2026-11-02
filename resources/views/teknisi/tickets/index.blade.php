@@ -8,6 +8,7 @@
 <div class="card shadow-sm border-0 mb-4">
     <div class="card-body p-3">
         <form method="GET" action="{{ route('teknisi.tickets.index') }}" class="row g-2 align-items-center">
+            @include('components.ticket-sort-filter')
             <div class="col-md-5">
                 <div class="input-group">
                     <span class="input-group-text bg-white text-muted"><i class="bi bi-search"></i></span>
@@ -68,8 +69,9 @@
                                 <small class="text-muted">{{ $ticket->user->satuan_kerja ?? '-' }}</small>
                             </td>
                             <td>
-                                <span class="badge bg-light text-dark border mb-1">{{ $ticket->category->name }}</span>
+                                <span class="badge bg-light text-dark border mb-1">{{ $ticket->category?->name ?? '-' }}</span>
                                 <div class="fw-semibold text-dark">{{ $ticket->title }}</div>
+                                <x-ticket-schedule :ticket="$ticket" />
                             </td>
                             <td><strong class="text-secondary small"><i class="bi bi-geo-alt me-1"></i>{{ $ticket->location }}</strong></td>
                             <td>

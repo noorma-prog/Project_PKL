@@ -10,7 +10,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
 
 class UserTicketController extends Controller
 {
@@ -37,11 +36,18 @@ class UserTicketController extends Controller
 
         $recentTickets = $user->tickets()
             ->with(['category', 'padal', 'rating'])
-            ->latest()
+            ->orderBySubmission()
             ->take(5)
             ->get();
 
-        return view('user.dashboard', compact('stats', 'recentTickets', 'unratedTickets'));
+        $scheduleTickets = $user->tickets()
+            ->with(['category', 'padal'])
+            ->whereDate('event_date', '>=', now()->toDateString())
+            ->orderBySchedule()
+            ->take(5)
+            ->get();
+
+        return view('user.dashboard', compact('stats', 'recentTickets', 'scheduleTickets', 'unratedTickets'));
     }
 
     /**
@@ -75,8 +81,12 @@ class UserTicketController extends Controller
             });
         }
 
-        $tickets = $query->latest()->paginate(10)->withQueryString();
-        $categories = Category::where('is_active', true)->get();
+        $tickets = ($request->query('sort') === 'schedule'
+            ? $query->orderBySchedule()
+            : $query->orderBySubmission())
+            ->paginate(10)
+            ->withQueryString();
+        $categories = Category::orderBy('name')->get();
         $unratedCount = $user->getUnratedCompletedTickets()->count();
 
         return view('user.tickets.index', compact('tickets', 'categories', 'unratedCount'));
@@ -97,9 +107,7 @@ class UserTicketController extends Controller
             );
         }
 
-        $categories = Category::where('is_active', true)->get();
-
-        return view('user.tickets.create', compact('categories'));
+        return view('user.tickets.create');
     }
 
     /**
@@ -118,16 +126,22 @@ class UserTicketController extends Controller
         }
 
         $validated = $request->validate([
-            'category_id' => ['required', Rule::exists('categories', 'id')->where('is_active', true)],
+            'category' => ['required', 'string', 'max:255'],
             'title' => ['required', 'string', 'max:255'],
             'location' => ['required', 'string', 'max:255'],
+            'event_date' => ['required', 'date_format:Y-m-d'],
+            'event_start_time' => ['required', 'date_format:H:i'],
+            'event_end_time' => ['required', 'date_format:H:i', 'after:event_start_time'],
             'description' => ['required', 'string'],
             'attachment' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'], // Max 5MB
         ], [
-            'category_id.required' => 'Pilih kategori gangguan IT.',
-            'category_id.exists' => 'Kategori yang dipilih tidak valid atau sudah nonaktif.',
+            'category.required' => 'Kategori gangguan IT wajib diisi.',
             'title.required' => 'Judul laporan permasalahan wajib diisi.',
             'location.required' => 'Lokasi ruangan / satuan kerja wajib diisi.',
+            'event_date.required' => 'Tanggal kegiatan wajib diisi.',
+            'event_start_time.required' => 'Jam mulai kegiatan wajib diisi.',
+            'event_end_time.required' => 'Jam selesai kegiatan wajib diisi.',
+            'event_end_time.after' => 'Jam selesai kegiatan harus setelah jam mulai.',
             'description.required' => 'Deskripsi detail permasalahan wajib diisi.',
             'attachment.mimes' => 'Format berkas lampiran harus berupa JPG, PNG, atau PDF.',
             'attachment.max' => 'Ukuran berkas lampiran maksimal 5 MB.',
@@ -153,12 +167,25 @@ class UserTicketController extends Controller
                 $attachmentPath = $request->file('attachment')->store('attachments/tickets', 'public');
             }
 
+            $category = Category::firstOrCreate(
+                ['name' => trim($validated['category'])],
+                [
+                    'slug' => Str::slug($validated['category']),
+                    'description' => null,
+                    'icon' => 'bi-tag',
+                    'is_active' => true,
+                ]
+            );
+
             $ticket = Ticket::create([
                 'ticket_number' => $ticketNumber,
                 'user_id' => $user->id,
-                'category_id' => $validated['category_id'],
+                'category_id' => $category->id,
                 'title' => $validated['title'],
                 'location' => $validated['location'],
+                'event_date' => $validated['event_date'],
+                'event_start_time' => $validated['event_start_time'],
+                'event_end_time' => $validated['event_end_time'],
                 'description' => $validated['description'],
                 'attachment' => $attachmentPath,
                 'status' => Ticket::STATUS_MENUNGGU_VERIFIKASI,

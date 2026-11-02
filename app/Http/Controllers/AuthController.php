@@ -81,6 +81,19 @@ class AuthController extends Controller
                 ]);
             }
 
+            if ($validated['account_type'] !== $user->role) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return redirect()->route('login')->withErrors([
+                    'account_type' => 'Jenis akun yang dipilih tidak sesuai dengan akun yang terdaftar.',
+                ])->withInput([
+                    'account_type' => $validated['account_type'],
+                    'email' => $validated['email'],
+                ]);
+            }
+
             if ($user->requiresEmailVerification() && !$user->hasVerifiedEmail()) {
                 $request->session()->regenerate();
 
@@ -101,16 +114,6 @@ class AuthController extends Controller
                     : 'Pendaftaran akun Anda masih menunggu persetujuan Administrator.';
 
                 return back()->withErrors(['email' => $message]);
-            }
-
-            if ($validated['account_type'] !== $user->role) {
-                Auth::logout();
-                $request->session()->invalidate();
-                $request->session()->regenerateToken();
-
-                return back()->withErrors([
-                    'account_type' => 'Jenis akun yang dipilih tidak sesuai dengan akun yang terdaftar.',
-                ]);
             }
 
             $request->session()->regenerate();
@@ -170,7 +173,7 @@ class AuthController extends Controller
             'satuan_kerja' => $validated['satuan_kerja'],
             'phone_number' => $validated['phone_number'],
             'alamat' => $validated['alamat'] ?? null,
-            'password' => Hash::make($validated['password']),
+            'password' => $validated['password'],
             'role' => User::ROLE_USER,
             'is_active' => true,
             'approval_status' => User::APPROVAL_ACTIVE,
@@ -191,6 +194,32 @@ class AuthController extends Controller
         return redirect()->route('verification.notice')->with(
             'success',
             'Pendaftaran berhasil. Verifikasi email melalui tautan yang dikirim sebelum menggunakan akun.'
+        );
+    }
+
+    public function resendVerificationEmail(Request $request)
+    {
+        $validated = $request->validate([
+            'verification_email' => ['required', 'string', 'email', 'max:255'],
+        ], [
+            'verification_email.required' => 'Alamat email wajib diisi untuk meminta tautan verifikasi.',
+            'verification_email.email' => 'Format email tidak valid.',
+        ]);
+
+        $user = User::where('email', $validated['verification_email'])->first();
+
+        if ($user
+            && $user->role === User::ROLE_USER
+            && $user->requiresEmailVerification()
+            && !$user->hasVerifiedEmail()
+            && !app(EmailVerificationSender::class)->send($user)) {
+            return redirect()->route('login')->with('error', EmailVerificationSender::FAILURE_MESSAGE)
+                ->withInput(['email' => $validated['verification_email']]);
+        }
+
+        return redirect()->route('login')->with(
+            'success',
+            'Jika email terdaftar dan membutuhkan verifikasi, tautan verifikasi baru akan dikirim.'
         );
     }
 

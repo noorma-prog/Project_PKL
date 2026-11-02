@@ -5,6 +5,7 @@
 @section('page_subtitle', 'Ringkasan operasional dan verifikasi layanan helpdesk IT POLDA')
 
 @section('content')
+<x-ticket-schedule-list :tickets="$scheduleTickets" show-route="admin.tickets.show" />
 <!-- Statistik Utama -->
 <div class="row g-3 mb-4">
     <div class="col-sm-6 col-xl-3">
@@ -134,8 +135,9 @@
                                 <small class="text-muted">{{ $ticket->user->satuan_kerja ?? $ticket->user->alamat ?? 'Satker POLDA' }}</small>
                             </td>
                             <td>
-                                <span class="badge bg-light text-dark border mb-1">{{ $ticket->category->name }}</span>
+                                <span class="badge bg-light text-dark border mb-1">{{ $ticket->category?->name ?? '-' }}</span>
                                 <div class="fw-semibold text-dark">{{ $ticket->title }}</div>
+                                <x-ticket-schedule :ticket="$ticket" />
                             </td>
                             <td><small class="text-secondary">{{ $ticket->location }}</small></td>
                             <td><small class="text-muted">{{ $ticket->created_at->diffForHumans() }}</small></td>
@@ -190,8 +192,9 @@
                                 <small class="text-muted">{{ $ticket->user->satuan_kerja ?? $ticket->user->alamat ?? 'Satker POLDA' }}</small>
                             </td>
                             <td>
-                                <span class="badge bg-light text-dark border mb-1">{{ $ticket->category->name }}</span>
+                                <span class="badge bg-light text-dark border mb-1">{{ $ticket->category?->name ?? '-' }}</span>
                                 <div class="fw-semibold text-dark">{{ $ticket->title }}</div>
+                                <x-ticket-schedule :ticket="$ticket" />
                             </td>
                             <td>
                                 @if($ticket->padal)

@@ -64,6 +64,7 @@ composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 npm install --no-audit --no-fund --no-package-lock
 npm run build
 php artisan migrate --force
+php artisan config:clear
 php artisan config:cache
 php artisan view:cache
 

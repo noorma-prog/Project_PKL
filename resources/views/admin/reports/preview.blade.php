@@ -31,7 +31,7 @@
 
                 <h4 class="text-center fw-bold text-uppercase mb-3">Rekapitulasi Penanganan Laporan Gangguan IT</h4>
                 <div class="text-center text-muted small mb-4">
-                    LayanIT • Periode: {{ $reportStart->translatedFormat('d F Y') }} - {{ $reportEnd->translatedFormat('d F Y') }} • Dibuat: {{ $createdAt->translatedFormat('d F Y, H:i') }} WIB
+                    LayanIT • Periode: {{ $reportStart->translatedFormat('d F Y') }} - {{ $reportEnd->translatedFormat('d F Y') }} • Dibuat: {{ $createdAt->translatedFormat('d F Y, H:i') }} WITA
                 </div>
 
                 @if($isEmpty)
@@ -65,6 +65,7 @@
                                         <td>
                                             <strong>{{ $ticket->title ?? '-' }}</strong><br>
                                             <small class="text-muted">{{ $ticket->category?->name ?? '-' }}</small>
+                                            <x-ticket-event-time :ticket="$ticket" />
                                         </td>
                                         <td>{{ $ticket->location ?? '-' }}</td>
                                         <td>{{ $ticket->padal?->name ?? '-' }}</td>

@@ -253,12 +253,92 @@
         @media (max-width: 991.98px) {
             .sidebar {
                 transform: translateX(-100%);
+                height: 100vh;
+                height: 100dvh;
             }
             .sidebar.show {
                 transform: translateX(0);
             }
             .main-wrapper {
                 margin-left: 0;
+            }
+            .sidebar-overlay {
+                position: fixed;
+                inset: 0;
+                z-index: 1025;
+                border: 0;
+                background: rgba(15, 29, 56, 0.48);
+            }
+            .sidebar-overlay.show {
+                display: block !important;
+            }
+            .topbar {
+                min-height: var(--topbar-height);
+                height: auto;
+                padding: 0.75rem 1rem;
+            }
+            .content-area {
+                padding: 1.25rem 1rem;
+                min-width: 0;
+                overflow-x: hidden;
+            }
+        }
+
+        .content-area,
+        .content-area .row > *,
+        .content-area .card,
+        .content-area .card-body {
+            min-width: 0;
+        }
+
+        body.sidebar-open {
+            overflow: hidden;
+        }
+
+        .content-area img,
+        .content-area video,
+        .content-area canvas {
+            max-width: 100%;
+        }
+
+        .content-area .table-responsive {
+            max-width: 100%;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .content-area .table-responsive > table {
+            min-width: 640px;
+        }
+
+        .content-area .text-break,
+        .content-area td,
+        .content-area th {
+            overflow-wrap: anywhere;
+        }
+
+        .content-area .form-control,
+        .content-area .form-select,
+        .content-area .btn {
+            min-height: 44px;
+        }
+
+        @media (max-width: 575.98px) {
+            .content-area {
+                padding: 1rem 0.75rem;
+            }
+            .topbar .role-badge {
+                display: none;
+            }
+            .content-area .card-header {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+            .content-area .btn {
+                white-space: normal;
+            }
+            .content-area .form-control,
+            .content-area .form-select {
+                font-size: 16px;
             }
         }
     </style>
@@ -267,6 +347,7 @@
 <body>
 
     <!-- Sidebar Navigation -->
+    <button type="button" class="sidebar-overlay d-none" id="sidebarOverlay" aria-label="Tutup menu navigasi" onclick="closeSidebar()"></button>
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
             <div class="logo-icon">
@@ -320,10 +401,6 @@
                 <a href="{{ route('admin.padals.index') }}" class="nav-link {{ request()->routeIs('admin.padals.*') ? 'active' : '' }}">
                     <i class="bi bi-shield-shaded"></i>
                     <span>Unit Padal</span>
-                </a>
-                <a href="{{ route('admin.categories.index') }}" class="nav-link {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}">
-                    <i class="bi bi-tags"></i>
-                    <span>Kategori Gangguan</span>
                 </a>
                 <a href="{{ route('admin.ratings.index') }}" class="nav-link {{ request()->routeIs('admin.ratings.*') ? 'active' : '' }}">
                     <i class="bi bi-star"></i>
@@ -387,17 +464,17 @@
         <!-- Top Navbar -->
         <header class="topbar">
             <div class="d-flex align-items-center gap-3">
-                <button class="btn btn-light d-lg-none" type="button" onclick="document.getElementById('sidebar').classList.toggle('show')">
+                <button class="btn btn-light d-lg-none" type="button" aria-label="Buka menu navigasi" aria-controls="sidebar" aria-expanded="false" onclick="toggleSidebar()">
                     <i class="bi bi-list fs-5"></i>
                 </button>
-                <div class="d-none d-sm-block">
+                <div>
                     <h5 class="mb-0 fw-bold text-dark">@yield('page_title', 'Dashboard')</h5>
-                    <small class="text-muted">@yield('page_subtitle', 'Sistem Helpdesk IT POLDA')</small>
+                    <small class="text-muted d-none d-md-block">@yield('page_subtitle', 'Sistem Helpdesk IT POLDA')</small>
                 </div>
             </div>
 
             <div class="d-flex align-items-center gap-3">
-                <span class="badge rounded-pill px-3 py-2 text-uppercase fw-bold role-badge-{{ Auth::user()->role }}">
+                <span class="badge rounded-pill px-3 py-2 text-uppercase fw-bold role-badge role-badge-{{ Auth::user()->role }}">
                     Role: {{ Auth::user()->role }}
                 </span>
 
@@ -458,6 +535,35 @@
 
     <!-- Bootstrap 5.3 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const menuButton = document.querySelector('[aria-controls="sidebar"]');
+            const isOpen = sidebar.classList.toggle('show');
+
+            overlay.classList.toggle('show', isOpen);
+            document.body.classList.toggle('sidebar-open', isOpen);
+            menuButton.setAttribute('aria-expanded', String(isOpen));
+        }
+
+        function closeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const menuButton = document.querySelector('[aria-controls="sidebar"]');
+
+            sidebar.classList.remove('show');
+            overlay.classList.remove('show');
+            document.body.classList.remove('sidebar-open');
+            menuButton.setAttribute('aria-expanded', 'false');
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                closeSidebar();
+            }
+        });
+    </script>
     @yield('scripts')
 </body>
 </html>

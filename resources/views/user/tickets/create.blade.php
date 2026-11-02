@@ -30,18 +30,39 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="category_id" class="form-label fw-semibold small text-secondary">Kategori Gangguan IT <span class="text-danger">*</span></label>
-                        <select name="category_id" id="category_id" class="form-select @error('category_id') is-invalid @enderror" required>
-                            <option value="">-- Pilih Kategori Permasalahan --</option>
-                            @foreach($categories as $cat)
-                                <option value="{{ $cat->id }}" {{ old('category_id') == $cat->id ? 'selected' : '' }}>
-                                    {{ $cat->name }} &mdash; {{ $cat->description }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('category_id')
+                        <label for="category" class="form-label fw-semibold small text-secondary">Kategori Gangguan IT <span class="text-danger">*</span></label>
+                        <input type="text" name="category" id="category" class="form-control @error('category') is-invalid @enderror"
+                            value="{{ old('category') }}" maxlength="255" required
+                            placeholder="Contoh: Gangguan Jaringan Internet">
+                        @error('category')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-12 col-md-4">
+                            <label for="event_date" class="form-label fw-semibold small text-secondary">Tanggal Kegiatan <span class="text-danger">*</span></label>
+                            <input type="date" name="event_date" id="event_date" class="form-control @error('event_date') is-invalid @enderror"
+                                value="{{ old('event_date') }}" required>
+                            @error('event_date')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <label for="event_start_time" class="form-label fw-semibold small text-secondary">Jam Mulai <span class="text-danger">*</span></label>
+                            <input type="time" name="event_start_time" id="event_start_time" class="form-control @error('event_start_time') is-invalid @enderror"
+                                value="{{ old('event_start_time') }}" required>
+                            @error('event_start_time')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <label for="event_end_time" class="form-label fw-semibold small text-secondary">Jam Selesai <span class="text-danger">*</span></label>
+                            <input type="time" name="event_end_time" id="event_end_time" class="form-control @error('event_end_time') is-invalid @enderror"
+                                value="{{ old('event_end_time') }}" required>
+                            @error('event_end_time')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
                     </div>
 
                     <div class="mb-3">
