@@ -119,6 +119,22 @@ class LayanItWorkflowTest extends TestCase
         $this->assertAuthenticatedAs($this->admin);
     }
 
+    public function test_authenticated_users_open_their_role_dashboard_instead_of_redirect_looping_from_login(): void
+    {
+        $destinations = [
+            [$this->admin, route('admin.dashboard')],
+            [$this->padal, route('padal.dashboard')],
+            [$this->teknisi, route('teknisi.dashboard')],
+            [$this->user, route('user.dashboard')],
+        ];
+
+        foreach ($destinations as [$user, $destination]) {
+            $this->actingAs($user)
+                ->get(route('login'))
+                ->assertRedirect($destination);
+        }
+    }
+
     public function test_wrong_password_is_rejected_without_disclosing_account_details(): void
     {
         $email = $this->user->email;

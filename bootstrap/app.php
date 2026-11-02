@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\User;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -17,6 +18,15 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
         ]);
+        $middleware->redirectUsersTo(function (Request $request): string {
+            return match ($request->user()?->role) {
+                User::ROLE_ADMIN => route('admin.dashboard'),
+                User::ROLE_PADAL => route('padal.dashboard'),
+                User::ROLE_TEKNISI => route('teknisi.dashboard'),
+                User::ROLE_USER => route('user.dashboard'),
+                default => route('profile.show'),
+            };
+        });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (InvalidSignatureException $exception, Request $request) {
