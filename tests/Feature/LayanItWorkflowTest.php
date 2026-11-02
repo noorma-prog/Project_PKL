@@ -846,6 +846,30 @@ class LayanItWorkflowTest extends TestCase
         $this->assertGuest();
     }
 
+    public function test_signed_verification_link_works_without_registration_browser_session(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'cross-browser-verify@polda.go.id',
+            'role' => User::ROLE_USER,
+            'requires_email_verification' => true,
+            'email_verified_at' => null,
+        ]);
+        $url = URL::temporarySignedRoute(
+            'verification.verify',
+            now()->addHour(),
+            ['id' => $user->id, 'hash' => sha1($user->getEmailForVerification())]
+        );
+
+        $this->assertGuest();
+        $this->get($url)
+            ->assertRedirect(route('login'))
+            ->assertSessionHas('success', 'Email berhasil diverifikasi. Silakan masuk menggunakan email dan kata sandi yang telah Anda daftarkan.')
+            ->assertSessionHas('verified_email', $user->email);
+
+        $this->assertNotNull($user->fresh()->email_verified_at);
+        $this->assertGuest();
+    }
+
     public function test_ticket_lists_sort_schedule_and_submission_separately(): void
     {
         $submittedAt = now()->subHour();
