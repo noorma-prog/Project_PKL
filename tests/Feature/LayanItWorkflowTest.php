@@ -810,6 +810,42 @@ class LayanItWorkflowTest extends TestCase
         $this->assertAuthenticatedAs($user);
     }
 
+    public function test_verification_clears_stale_login_errors_and_prefills_verified_email(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'clear-login-error@polda.go.id',
+            'role' => User::ROLE_USER,
+            'requires_email_verification' => true,
+            'email_verified_at' => null,
+        ]);
+        $url = URL::temporarySignedRoute(
+            'verification.verify',
+            now()->addHour(),
+            ['id' => $user->id, 'hash' => sha1($user->getEmailForVerification())]
+        );
+
+        $this->from(route('login'))->post(route('login.post'), [
+            'account_type' => User::ROLE_USER,
+            'email' => $user->email,
+            'password' => 'password-salah',
+        ])->assertSessionHasErrors('email');
+
+        $this->get($url)
+            ->assertRedirect(route('login'))
+            ->assertSessionHas('success')
+            ->assertSessionHas('verified_email', $user->email)
+            ->assertSessionMissing('errors')
+            ->assertSessionMissing('_old_input');
+
+        $this->get(route('login'))
+            ->assertOk()
+            ->assertSee('Email berhasil diverifikasi. Silakan masuk menggunakan email dan kata sandi yang telah Anda daftarkan.')
+            ->assertSee('value="'.$user->email.'"', false)
+            ->assertDontSee('Email atau kata sandi yang Anda masukkan salah.');
+        $this->assertNotNull($user->fresh()->email_verified_at);
+        $this->assertGuest();
+    }
+
     public function test_ticket_lists_sort_schedule_and_submission_separately(): void
     {
         $submittedAt = now()->subHour();

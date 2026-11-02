@@ -31,7 +31,7 @@
         <div class="input-group">
             <span class="input-group-text bg-light border-end-0 text-secondary"><i class="bi bi-envelope"></i></span>
             <input type="email" name="email" id="email" class="form-control border-start-0 @error('email') is-invalid @enderror" 
-                   value="{{ old('email') }}" placeholder="contoh: nama@polda.go.id" autocomplete="username" required autofocus>
+                   value="{{ old('email', session('verified_email')) }}" placeholder="contoh: nama@polda.go.id" autocomplete="username" required autofocus>
         </div>
         @error('email')
             <div class="text-danger small mt-1">{{ $message }}</div>
@@ -74,7 +74,7 @@
         <div class="input-group">
             <input type="email" name="verification_email" id="verification_email"
                    class="form-control @error('verification_email') is-invalid @enderror"
-                   value="{{ old('verification_email', old('email')) }}" autocomplete="email" required>
+                   value="{{ old('verification_email', old('email', session('verified_email'))) }}" autocomplete="email" required>
             <button type="submit" class="btn btn-outline-primary">Kirim ulang</button>
         </div>
         @error('verification_email')

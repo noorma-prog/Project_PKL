@@ -70,12 +70,11 @@ Route::get('/email/verify/{id}/{hash}', function (Request $request, $id, $hash) 
     $request->session()->invalidate();
     $request->session()->regenerateToken();
 
-    return redirect()->route('login')->with(
-        'success',
-        $alreadyVerified
+    return redirect()->route('login')
+        ->with('verified_email', $user->email)
+        ->with('success', $alreadyVerified
             ? 'Email ini sudah terverifikasi. Silakan masuk menggunakan email dan kata sandi Anda.'
-            : 'Email berhasil diverifikasi. Silakan masuk menggunakan email dan kata sandi yang telah Anda daftarkan.'
-    );
+            : 'Email berhasil diverifikasi. Silakan masuk menggunakan email dan kata sandi yang telah Anda daftarkan.');
 })->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
 
 Route::post('/email/verification-notification', function (Request $request) {

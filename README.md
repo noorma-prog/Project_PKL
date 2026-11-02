@@ -67,7 +67,7 @@ php artisan config:clear
 php artisan config:cache
 ```
 
-Verification links are valid for 60 minutes (`auth.verification.expire`) and can be reissued from the verification page or the login page; resend requests are throttled. A valid link verifies the account and returns the user to login, while invalid or expired links retain signed-URL validation and show a resend option. Login checks the stored password hash and reports a role mismatch separately; public registration can only create reporter accounts. Confirm delivery and the complete registration-to-verification flow with a mailbox you control after deployment.
+Verification links are valid for 60 minutes (`auth.verification.expire`) and can be reissued from the verification page or the login page; resend requests are throttled. Verification is persisted on the user record and does not depend on the browser session that registered. A valid link clears stale login errors, returns the user to login with a success notice, and pre-fills only the verified email (never the password); invalid or expired links retain signed-URL validation and show a resend option. Login checks the stored password hash and reports a role mismatch separately; public registration can only create reporter accounts. Confirm delivery and the complete registration-to-verification flow with a mailbox you control after deployment.
 
 ## Ticket categories and activity schedules
 
