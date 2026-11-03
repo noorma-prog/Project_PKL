@@ -1,6 +1,6 @@
 @props(['tickets', 'showRoute'])
 
-<section class="card border-0 shadow-sm mb-4">
+<section {{ $attributes->merge(['class' => 'card border-0 shadow-sm mb-4']) }}>
     <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center gap-2">
         <div>
             <h2 class="h6 fw-bold mb-1">Jadwal Kegiatan Terdekat</h2>
