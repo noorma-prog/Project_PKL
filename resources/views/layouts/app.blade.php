@@ -163,6 +163,14 @@
             background: rgba(0, 0, 0, 0.2);
         }
 
+        .sidebar-footer .btn {
+            min-width: 44px;
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
         /* Main Content Wrapper */
         .main-wrapper {
             margin-left: var(--sidebar-width);
@@ -313,13 +321,23 @@
         .content-area .text-break,
         .content-area td,
         .content-area th {
-            overflow-wrap: anywhere;
+            overflow-wrap: break-word;
+            word-break: normal;
         }
 
         .content-area .form-control,
         .content-area .form-select,
         .content-area .btn {
             min-height: 44px;
+        }
+
+        .content-area .pagination {
+            flex-wrap: wrap;
+            row-gap: 0.25rem;
+        }
+
+        .content-area .modal-body {
+            overflow-y: auto;
         }
 
         @media (max-width: 575.98px) {
@@ -339,6 +357,142 @@
             .content-area .form-control,
             .content-area .form-select {
                 font-size: 16px;
+            }
+        }
+
+        @media (max-width: 991.98px) {
+            .sidebar {
+                width: min(var(--sidebar-width), 85vw);
+            }
+
+            .topbar {
+                gap: 0.75rem;
+            }
+
+            .topbar > .d-flex {
+                min-width: 0;
+            }
+
+            .topbar > .d-flex:first-child {
+                flex: 1 1 auto;
+            }
+
+            .topbar > .d-flex:first-child > div {
+                min-width: 0;
+            }
+
+            .topbar h5 {
+                font-size: clamp(0.95rem, 3.5vw, 1.15rem);
+                line-height: 1.25;
+                overflow-wrap: break-word;
+            }
+
+            .topbar .btn[aria-controls="sidebar"] {
+                flex: 0 0 auto;
+                min-width: 44px;
+                min-height: 44px;
+            }
+
+            .topbar .dropdown > .btn {
+                min-width: 44px;
+                min-height: 44px;
+            }
+
+            .topbar .dropdown-item {
+                min-height: 44px;
+                display: flex;
+                align-items: center;
+            }
+
+            .content-area .table-responsive {
+                overflow: visible;
+            }
+
+            .content-area .table-responsive > table {
+                display: block;
+                width: 100%;
+                min-width: 0;
+                border-collapse: separate;
+            }
+
+            .content-area .table-responsive > table thead {
+                position: absolute;
+                width: 1px;
+                height: 1px;
+                padding: 0;
+                margin: -1px;
+                overflow: hidden;
+                clip: rect(0, 0, 0, 0);
+                white-space: nowrap;
+                border: 0;
+            }
+
+            .content-area .table-responsive > table tbody {
+                display: block;
+                width: 100%;
+            }
+
+            .content-area .table-responsive > table tbody > tr:not(.table-empty-row) {
+                display: block;
+                margin: 0.75rem;
+                padding: 0.75rem;
+                border: 1px solid #e2e8f0;
+                border-radius: 0.75rem;
+                background: #ffffff;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            }
+
+            .content-area .table-responsive > table tbody > tr:not(.table-empty-row) > td {
+                display: grid;
+                grid-template-columns: minmax(5.5rem, 35%) minmax(0, 1fr);
+                align-items: start;
+                gap: 0.5rem;
+                width: 100%;
+                padding: 0.45rem 0;
+                border: 0;
+                border-bottom: 1px solid #f1f5f9;
+                text-align: left !important;
+            }
+
+            .content-area .table-responsive > table tbody > tr:not(.table-empty-row) > td:last-child {
+                border-bottom: 0;
+            }
+
+            .content-area .table-responsive > table tbody > tr:not(.table-empty-row) > td::before {
+                content: attr(data-label);
+                color: #64748b;
+                font-size: 0.75rem;
+                font-weight: 600;
+                line-height: 1.4;
+            }
+
+            .content-area .table-responsive > table tbody > tr.table-empty-row {
+                display: block;
+                width: 100%;
+            }
+
+            .content-area .table-responsive > table tbody > tr.table-empty-row > td {
+                display: block;
+                width: 100%;
+                padding: 1.5rem 0.75rem;
+            }
+
+        }
+
+        @media (max-width: 575.98px) {
+            .content-area .modal-dialog {
+                margin: 0.5rem;
+            }
+
+            .content-area .modal-content {
+                max-height: calc(100vh - 1rem);
+                max-height: calc(100dvh - 1rem);
+            }
+
+            .content-area .modal-header,
+            .content-area .modal-footer {
+                flex-wrap: wrap;
+                gap: 0.5rem;
             }
         }
     </style>
@@ -562,6 +716,26 @@
             if (event.key === 'Escape') {
                 closeSidebar();
             }
+        });
+
+        document.querySelectorAll('.content-area .table-responsive > table').forEach((table) => {
+            const headers = Array.from(table.querySelectorAll('thead th'), (header) =>
+                header.textContent.trim().replace(/\s+/g, ' ')
+            );
+
+            table.querySelectorAll('tbody tr').forEach((row) => {
+                const cells = Array.from(row.children);
+                if (cells.some((cell) => cell.colSpan > 1)) {
+                    row.classList.add('table-empty-row');
+                    return;
+                }
+
+                cells.forEach((cell, index) => {
+                    if (headers[index]) {
+                        cell.dataset.label = headers[index];
+                    }
+                });
+            });
         });
     </script>
     @yield('scripts')

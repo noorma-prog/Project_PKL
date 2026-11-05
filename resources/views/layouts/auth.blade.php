@@ -30,6 +30,7 @@
             background-repeat: no-repeat;
             background-attachment: fixed;
             min-height: 100vh;
+            min-height: 100svh;
             color: #334155;
             display: flex;
             align-items: center;
@@ -127,11 +128,26 @@
             min-height: 44px;
         }
 
+        .auth-body,
+        .auth-body .row > *,
+        .auth-body .input-group > * {
+            min-width: 0;
+        }
+
+        .auth-body {
+            overflow-wrap: break-word;
+        }
+
+        .auth-body .btn {
+            white-space: normal;
+        }
+
         @media (max-width: 576px) {
             body {
                 align-items: flex-start;
                 padding: 1rem 0.75rem;
                 background-position: center;
+                background-attachment: scroll;
             }
             .auth-card {
                 border-radius: 0.75rem;
