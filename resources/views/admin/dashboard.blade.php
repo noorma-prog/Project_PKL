@@ -5,6 +5,7 @@
 @section('page_subtitle', 'Ringkasan operasional dan verifikasi layanan helpdesk IT POLDA')
 
 @section('content')
+<div class="admin-dashboard-polish">
 <x-ticket-schedule-list :tickets="$scheduleTickets" show-route="admin.tickets.show" />
 <!-- Statistik Utama -->
 <div class="row g-3 mb-4">
@@ -221,4 +222,265 @@
         </div>
     </div>
 </div>
+</div>
+@endsection
+
+@section('styles')
+<style>
+    .admin-dashboard-polish {
+        --admin-blue: #2563eb;
+        --admin-red: #dc4c4c;
+        --admin-cyan: #0891b2;
+        --admin-green: #159466;
+        --admin-indigo: #4f46e5;
+        --admin-teal: #0f9b8e;
+        --admin-neutral: #64748b;
+        --admin-gold: #d89013;
+    }
+
+    .admin-dashboard-polish > section.card:first-of-type {
+        overflow: hidden;
+        margin-bottom: 1.5rem !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 0.9rem;
+        box-shadow: 0 3px 12px rgba(15, 29, 56, 0.045) !important;
+    }
+
+    .admin-dashboard-polish > section.card:first-of-type > .card-header {
+        padding: 1rem 1.25rem;
+        border-bottom-color: #e8edf4;
+        background: linear-gradient(110deg, #fff 0%, #f8fbff 100%) !important;
+    }
+
+    .admin-dashboard-polish > section.card:first-of-type > .card-header h2 {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        color: #17243b;
+    }
+
+    .admin-dashboard-polish > section.card:first-of-type > .card-header h2::before {
+        width: 0.25rem;
+        height: 1.25rem;
+        border-radius: 1rem;
+        background: linear-gradient(180deg, #2563eb, #38bdf8);
+        content: "";
+    }
+
+    .admin-dashboard-polish > section.card:first-of-type .list-group-item {
+        padding: 1rem 1.25rem;
+        border-color: #edf1f6;
+        overflow-wrap: break-word;
+    }
+
+    .admin-dashboard-polish > section.card:first-of-type .list-group-item:hover {
+        background-color: #f8fbff;
+    }
+
+    .admin-dashboard-polish > .row {
+        --bs-gutter-x: 1.15rem;
+        --bs-gutter-y: 1.15rem;
+        margin-bottom: 1.35rem !important;
+    }
+
+    .admin-dashboard-polish > .row:first-of-type > [class*="col-"] > .stat-card {
+        --admin-tone: var(--admin-blue);
+        --admin-tone-soft: #eff6ff;
+        min-height: 118px;
+        height: 100%;
+        align-items: center;
+        padding: 1.15rem 1.2rem;
+        border: 1px solid #e3e9f1;
+        border-inline-start: 3px solid var(--admin-tone);
+        border-radius: 0.85rem;
+        background: #fff;
+        box-shadow: 0 2px 7px rgba(15, 29, 56, 0.045);
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    }
+
+    .admin-dashboard-polish > .row:first-of-type > [class*="col-"] > .stat-card:hover,
+    .admin-dashboard-polish > .row:nth-of-type(2) > [class*="col-"] > .card:hover {
+        border-color: var(--admin-tone);
+        box-shadow: 0 7px 18px rgba(15, 29, 56, 0.09);
+        transform: translateY(-2px);
+    }
+
+    .admin-dashboard-polish > .row:first-of-type > [class*="col-"] > .stat-card h3 {
+        color: var(--admin-tone) !important;
+        font-size: clamp(1.65rem, 2vw, 1.9rem);
+        letter-spacing: -0.04em;
+        line-height: 1.1;
+    }
+
+    .admin-dashboard-polish > .row:first-of-type > [class*="col-"] > .stat-card > div:first-child {
+        min-width: 0;
+        padding-inline-end: 0.5rem;
+    }
+
+    .admin-dashboard-polish > .row:first-of-type > [class*="col-"] > .stat-card .small {
+        display: block;
+        color: #536176 !important;
+        font-size: 0.8rem;
+        line-height: 1.4;
+    }
+
+    .admin-dashboard-polish > .row:first-of-type > [class*="col-"]:nth-child(2) > .stat-card {
+        --admin-tone: var(--admin-red);
+        --admin-tone-soft: #fff1f1;
+    }
+
+    .admin-dashboard-polish > .row:first-of-type > [class*="col-"]:nth-child(3) > .stat-card {
+        --admin-tone: var(--admin-cyan);
+        --admin-tone-soft: #ecfeff;
+    }
+
+    .admin-dashboard-polish > .row:first-of-type > [class*="col-"]:nth-child(4) > .stat-card {
+        --admin-tone: var(--admin-green);
+        --admin-tone-soft: #ecfdf5;
+    }
+
+    .admin-dashboard-polish > .row:first-of-type > [class*="col-"] > .stat-card .stat-icon {
+        flex: 0 0 46px;
+        width: 46px;
+        height: 46px;
+        border-radius: 13px;
+        color: var(--admin-tone) !important;
+        background: var(--admin-tone-soft) !important;
+        font-size: 1.3rem;
+    }
+
+    .admin-dashboard-polish > .row:nth-of-type(2) > [class*="col-"] > .card {
+        --admin-tone: var(--admin-indigo);
+        --admin-tone-soft: #eef2ff;
+        min-height: 104px;
+        height: 100%;
+        align-items: center;
+        padding: 1rem !important;
+        border: 1px solid #e3e9f1 !important;
+        border-inline-start: 3px solid var(--admin-tone);
+        border-radius: 0.85rem;
+        box-shadow: 0 2px 7px rgba(15, 29, 56, 0.045) !important;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    }
+
+    .admin-dashboard-polish > .row:nth-of-type(2) > [class*="col-"] > .card > .d-flex {
+        min-width: 0;
+        gap: 0.85rem !important;
+    }
+
+    .admin-dashboard-polish > .row:nth-of-type(2) > [class*="col-"] > .card > .d-flex > div:first-child {
+        flex: 0 0 42px;
+        width: 42px;
+        height: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 !important;
+        border-radius: 12px !important;
+        color: var(--admin-tone) !important;
+        background: var(--admin-tone-soft) !important;
+        font-size: 1.2rem !important;
+    }
+
+    .admin-dashboard-polish > .row:nth-of-type(2) > [class*="col-"] > .card > .d-flex > div:last-child {
+        min-width: 0;
+    }
+
+    .admin-dashboard-polish > .row:nth-of-type(2) > [class*="col-"] > .card .small {
+        color: #5b687c !important;
+        font-size: 0.76rem;
+        line-height: 1.4;
+    }
+
+    .admin-dashboard-polish > .row:nth-of-type(2) > [class*="col-"] > .card strong {
+        display: block;
+        color: #17243b !important;
+        font-size: 1rem;
+        line-height: 1.3;
+        overflow-wrap: break-word;
+    }
+
+    .admin-dashboard-polish > .row:nth-of-type(2) > [class*="col-"]:nth-child(2) > .card {
+        --admin-tone: var(--admin-teal);
+        --admin-tone-soft: #ecfdf9;
+    }
+
+    .admin-dashboard-polish > .row:nth-of-type(2) > [class*="col-"]:nth-child(3) > .card {
+        --admin-tone: var(--admin-neutral);
+        --admin-tone-soft: #f1f5f9;
+    }
+
+    .admin-dashboard-polish > .row:nth-of-type(2) > [class*="col-"]:nth-child(4) > .card {
+        --admin-tone: var(--admin-gold);
+        --admin-tone-soft: #fffbeb;
+    }
+
+    .admin-dashboard-polish > .card {
+        overflow: hidden;
+        border-radius: 0.85rem;
+        box-shadow: 0 2px 8px rgba(15, 29, 56, 0.045) !important;
+    }
+
+    .admin-dashboard-polish > .card > .card-header {
+        min-height: 56px;
+        gap: 0.75rem;
+        padding: 0.9rem 1.1rem;
+        border-bottom-color: #e8edf4;
+    }
+
+    .admin-dashboard-polish > .card > .card-body .table {
+        --bs-table-border-color: #edf1f6;
+    }
+
+    .admin-dashboard-polish > .card > .card-body .table thead th {
+        padding: 0.8rem 0.75rem;
+        color: #536176;
+        font-size: 0.75rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .admin-dashboard-polish > .card > .card-body .table tbody td {
+        padding: 0.85rem 0.75rem;
+        vertical-align: middle;
+    }
+
+    .admin-dashboard-polish > .card > .card-body .table tbody tr:last-child > * {
+        border-bottom: 0;
+    }
+
+    @media (max-width: 575.98px) {
+        .admin-dashboard-polish > .row {
+            --bs-gutter-x: 0.85rem;
+            --bs-gutter-y: 0.85rem;
+            margin-bottom: 1.1rem !important;
+        }
+
+        .admin-dashboard-polish > .row:first-of-type > [class*="col-"] > .stat-card {
+            min-height: 104px;
+            padding: 0.9rem;
+        }
+
+        .admin-dashboard-polish > .row:first-of-type > [class*="col-"] > .stat-card .stat-icon {
+            flex-basis: 40px;
+            width: 40px;
+            height: 40px;
+            font-size: 1.1rem;
+        }
+
+        .admin-dashboard-polish > .row:nth-of-type(2) > [class*="col-"] > .card {
+            min-height: 96px;
+            padding: 0.85rem !important;
+        }
+
+        .admin-dashboard-polish > .card > .card-header {
+            padding: 0.8rem 0.9rem;
+        }
+
+        .admin-dashboard-polish > section.card:first-of-type > .card-header,
+        .admin-dashboard-polish > section.card:first-of-type .list-group-item {
+            padding-inline: 0.9rem;
+        }
+    }
+</style>
 @endsection
