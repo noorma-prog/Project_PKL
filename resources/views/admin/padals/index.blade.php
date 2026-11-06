@@ -1,225 +1,194 @@
 @extends('layouts.app')
 
-@section('title', 'Mengelola Unit Padal')
-@section('page_title', 'Mengelola Unit Padal (Perwira Pengendali)')
-@section('page_subtitle', 'Manajemen regu/unit Padal penanganan gangguan IT di lingkungan POLDA')
+@section('title', 'Unit Padal')
+@section('page_title', 'Unit Padal')
+@section('page_subtitle', 'Kelola layanan IT dengan informasi yang jelas.')
 
 @section('content')
-<div class="row g-4 mb-4">
-    <div class="col-12">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-shield-shaded text-primary fs-5"></i>
-                    <h6 class="mb-0 fw-bold text-dark">Daftar Unit Padal ({{ $padals->total() }})</h6>
-                </div>
-                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalTambahPadal">
-                    <i class="bi bi-plus-circle me-1"></i> Tambah Unit Padal
-                </button>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th style="width: 50px;" class="text-center">No</th>
-                                <th>Nama Unit Padal</th>
-                                <th>Perwira Pengendali (Ketua)</th>
-                                <th>Deskripsi Penugasan</th>
-                                <th class="text-center">Anggota Teknisi</th>
-                                <th class="text-center">Total Tiket</th>
-                                <th class="text-center">Status</th>
-                                <th class="text-end" style="width: 140px;">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($padals as $index => $padal)
-                                <tr>
-                                    <td class="text-center">{{ $padals->firstItem() + $index }}</td>
-                                    <td>
-                                        <div class="fw-bold text-dark">{{ $padal->nama_padal }}</div>
-                                        <small class="text-muted">ID: #PADAL-{{ str_pad($padal->id, 3, '0', STR_PAD_LEFT) }}</small>
-                                    </td>
-                                    <td>
-                                        @if($padal->leader)
-                                            <div class="fw-semibold text-primary">{{ $padal->leader->name }}</div>
-                                            <small class="text-muted">NRP: {{ $padal->leader->nrp_nip ?? '-' }}</small>
-                                        @else
-                                            <span class="badge bg-secondary">Belum Ditentukan</span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        <span class="small text-muted">{{ Str::limit($padal->deskripsi ?? 'Tidak ada keterangan.', 60) }}</span>
-                                    </td>
-                                    <td class="text-center">
-                                        <span class="badge bg-info text-dark rounded-pill px-3">
-                                            <i class="bi bi-people me-1"></i> {{ $padal->members_count ?? $padal->members->count() }} Anggota
-                                        </span>
-                                    </td>
-                                    <td class="text-center">
-                                        <span class="badge bg-secondary rounded-pill px-2">
-                                            {{ $padal->tickets_count ?? $padal->tickets->count() }}
-                                        </span>
-                                    </td>
-                                    <td class="text-center">
-                                        @if($padal->status === 'aktif')
-                                            <span class="badge bg-success">Aktif</span>
-                                        @else
-                                            <span class="badge bg-danger">Nonaktif</span>
-                                        @endif
-                                    </td>
-                                    <td class="text-end">
-                                        <div class="btn-group btn-group-sm">
-                                            <button type="button" class="btn btn-outline-warning" 
-                                                    data-bs-toggle="modal" 
-                                                    data-bs-target="#modalEditPadal{{ $padal->id }}" 
-                                                    title="Ubah Padal">
-                                                <i class="bi bi-pencil-square"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-outline-danger" 
-                                                    data-bs-toggle="modal" 
-                                                    data-bs-target="#modalHapusPadal{{ $padal->id }}" 
-                                                    title="Hapus Padal">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-
-                                <!-- Modal Edit Padal -->
-                                <div class="modal fade" id="modalEditPadal{{ $padal->id }}" tabindex="-1" aria-hidden="true">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <form action="{{ route('admin.padals.update', $padal->id) }}" method="POST">
-                                                @csrf
-                                                @method('PUT')
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title fw-bold">Ubah Data Unit Padal</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <div class="mb-3">
-                                                        <label class="form-label small fw-semibold text-secondary">Nama Unit Padal</label>
-                                                        <input type="text" name="nama_padal" class="form-control" value="{{ old('nama_padal', $padal->nama_padal) }}" required>
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label class="form-label small fw-semibold text-secondary">Ketua / Perwira Pengendali</label>
-                                                        <select name="user_id" class="form-select" required>
-                                                            <option value="">-- Pilih Perwira Pengendali --</option>
-                                                            @foreach($padalOfficers as $officer)
-                                                                <option value="{{ $officer->id }}" {{ $padal->user_id == $officer->id ? 'selected' : '' }}>
-                                                                    {{ $officer->name }} (NRP: {{ $officer->nrp_nip }})
-                                                                </option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label class="form-label small fw-semibold text-secondary">Status Operasional</label>
-                                                        <select name="status" class="form-select" required>
-                                                            <option value="aktif" {{ $padal->status === 'aktif' ? 'selected' : '' }}>Aktif</option>
-                                                            <option value="nonaktif" {{ $padal->status === 'nonaktif' ? 'selected' : '' }}>Nonaktif</option>
-                                                        </select>
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label class="form-label small fw-semibold text-secondary">Deskripsi / Ruang Lingkup</label>
-                                                        <textarea name="deskripsi" class="form-control" rows="3">{{ old('deskripsi', $padal->deskripsi) }}</textarea>
-                                                    </div>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
-                                                    <button type="submit" class="btn btn-primary btn-sm">Simpan Perubahan</button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Modal Hapus Padal -->
-                                <div class="modal fade" id="modalHapusPadal{{ $padal->id }}" tabindex="-1" aria-hidden="true">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <form action="{{ route('admin.padals.destroy', $padal->id) }}" method="POST">
-                                                @csrf
-                                                @method('DELETE')
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title fw-bold text-danger">Konfirmasi Hapus Unit Padal</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                </div>
-                                                <div class="modal-body text-start">
-                                                    <p class="mb-1">Apakah Anda yakin ingin menghapus unit Padal ini?</p>
-                                                    <div class="p-3 bg-light rounded text-dark">
-                                                        <strong>{{ $padal->nama_padal }}</strong><br>
-                                                        <small class="text-muted">Ketua: {{ $padal->leader ? $padal->leader->name : '-' }}</small>
-                                                    </div>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
-                                                    <button type="submit" class="btn btn-danger btn-sm">Ya, Hapus Unit</button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                            @empty
-                                <tr>
-                                    <td colspan="8" class="text-center py-4 text-muted">Belum ada unit Padal yang terdaftar.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            @if($padals->hasPages())
-                <div class="card-footer bg-white py-3">
-                    {{ $padals->links() }}
-                </div>
-            @endif
-        </div>
-    </div>
+<div class="mb-4">
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalTambahPadal">
+        <i class="bi bi-plus-lg me-1"></i> Tambah Unit Padal
+    </button>
 </div>
 
-<!-- Modal Tambah Padal -->
-<div class="modal fade" id="modalTambahPadal" tabindex="-1" aria-hidden="true">
+<!-- Modal Tambah Unit Padal -->
+<div class="modal fade" id="modalTambahPadal" tabindex="-1" aria-labelledby="modalTambahPadalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <form action="{{ route('admin.padals.store') }}" method="POST">
                 @csrf
                 <div class="modal-header">
-                    <h5 class="modal-title fw-bold">Tambah Unit Padal Baru</h5>
+                    <h5 class="modal-title fw-bold text-dark" id="modalTambahPadalLabel">Tambah Unit Padal</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold text-secondary">Nama Unit Padal</label>
-                        <input type="text" name="nama_padal" class="form-control" placeholder="contoh: Regu Padal Charlie (Jaringan)" required>
+                        <label for="nama_padal" class="form-label">Nama Unit Padal <span class="text-danger">*</span></label>
+                        <input type="text" name="nama_padal" id="nama_padal" class="form-control @error('nama_padal') is-invalid @enderror" 
+                               placeholder="Unit Padal Jaringan" value="{{ old('nama_padal') }}" required>
+                        @error('nama_padal')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
+
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold text-secondary">Pilih Perwira Pengendali (Ketua)</label>
-                        <select name="user_id" class="form-select" required>
-                            <option value="">-- Pilih Perwira Pengendali --</option>
-                            @foreach($padalOfficers as $officer)
-                                <option value="{{ $officer->id }}">{{ $officer->name }} (NRP: {{ $officer->nrp_nip }})</option>
+                        <label for="user_id" class="form-label">Perwira Pengendali <span class="text-danger">*</span></label>
+                        <select name="user_id" id="user_id" class="form-select @error('user_id') is-invalid @enderror" required>
+                            <option value="">Pilih akun Padal</option>
+                            @foreach($padalUsers as $user)
+                                <option value="{{ $user->id }}" {{ old('user_id') == $user->id ? 'selected' : '' }}>
+                                    {{ $user->name }} ({{ $user->nrp_nip ?? '-' }})
+                                </option>
                             @endforeach
                         </select>
+                        @error('user_id')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
+
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold text-secondary">Status Operasional</label>
-                        <select name="status" class="form-select" required>
-                            <option value="aktif" selected>Aktif</option>
-                            <option value="nonaktif">Nonaktif</option>
+                        <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
+                        <select name="status" id="status" class="form-select @error('status') is-invalid @enderror" required>
+                            <option value="aktif" {{ old('status', 'aktif') === 'aktif' ? 'selected' : '' }}>Aktif</option>
+                            <option value="nonaktif" {{ old('status') === 'nonaktif' ? 'selected' : '' }}>Nonaktif</option>
                         </select>
+                        @error('status')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold text-secondary">Deskripsi / Ruang Lingkup Penugasan</label>
-                        <textarea name="deskripsi" class="form-control" rows="3" placeholder="Jelaskan spesialisasi atau lingkup tugas unit Padal ini..."></textarea>
+
+                    <div class="mb-2">
+                        <label for="deskripsi" class="form-label">Deskripsi (Opsional)</label>
+                        <textarea name="deskripsi" id="deskripsi" rows="3" class="form-control" placeholder="Tugas dan lingkup unit...">{{ old('deskripsi') }}</textarea>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary btn-sm">Simpan Unit Padal</button>
+                <div class="modal-footer d-flex flex-column gap-2 p-4 pt-0 border-0">
+                    <button type="submit" class="btn btn-primary w-100">Simpan Unit Padal</button>
+                    <button type="button" class="btn btn-outline-secondary w-100" data-bs-dismiss="modal">Batal</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+<!-- Daftar Unit Padal -->
+<div class="d-flex flex-column gap-3 mb-4">
+    @forelse($padals as $padal)
+        <div class="card mb-0">
+            <div class="card-body p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h5 class="fw-bold text-dark mb-1">{{ $padal->nama_padal }}</h5>
+                    <div class="text-muted small">
+                        Ketua: <strong>{{ $padal->leader ? $padal->leader->name : 'Belum Ditentukan' }}</strong>
+                        • {{ $padal->members_count ?? $padal->members->count() }} anggota
+                        • Status: <span class="badge {{ $padal->status === 'aktif' ? 'bg-success' : 'bg-secondary' }}">{{ ucfirst($padal->status) }}</span>
+                    </div>
+                    @if($padal->deskripsi)
+                        <div class="small text-secondary mt-1">{{ Str::limit($padal->deskripsi, 80) }}</div>
+                    @endif
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalEditPadal{{ $padal->id }}">
+                        Ubah Unit
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modalHapusPadal{{ $padal->id }}">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Edit Unit Padal -->
+        <div class="modal fade" id="modalEditPadal{{ $padal->id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form action="{{ route('admin.padals.update', $padal->id) }}" method="POST">
+                        @csrf
+                        @method('PUT')
+                        <div class="modal-header">
+                            <h5 class="modal-title fw-bold text-dark">Ubah Unit Padal</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body p-4">
+                            <div class="mb-3">
+                                <label class="form-label">Nama Unit Padal <span class="text-danger">*</span></label>
+                                <input type="text" name="nama_padal" class="form-control" value="{{ old('nama_padal', $padal->nama_padal) }}" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Perwira Pengendali <span class="text-danger">*</span></label>
+                                <select name="user_id" class="form-select" required>
+                                    <option value="">Pilih akun Padal</option>
+                                    @foreach($padalUsers as $user)
+                                        <option value="{{ $user->id }}" {{ old('user_id', $padal->user_id) == $user->id ? 'selected' : '' }}>
+                                            {{ $user->name }} ({{ $user->nrp_nip ?? '-' }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Status <span class="text-danger">*</span></label>
+                                <select name="status" class="form-select" required>
+                                    <option value="aktif" {{ old('status', $padal->status) === 'aktif' ? 'selected' : '' }}>Aktif</option>
+                                    <option value="nonaktif" {{ old('status', $padal->status) === 'nonaktif' ? 'selected' : '' }}>Nonaktif</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-2">
+                                <label class="form-label">Deskripsi (Opsional)</label>
+                                <textarea name="deskripsi" rows="3" class="form-control">{{ old('deskripsi', $padal->deskripsi) }}</textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer d-flex flex-column gap-2 p-4 pt-0 border-0">
+                            <button type="submit" class="btn btn-primary w-100">Simpan Unit Padal</button>
+                            <button type="button" class="btn btn-outline-secondary w-100" data-bs-dismiss="modal">Batal</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Konfirmasi Hapus Unit Padal -->
+        <div class="modal fade" id="modalHapusPadal{{ $padal->id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form action="{{ route('admin.padals.destroy', $padal->id) }}" method="POST">
+                        @csrf
+                        @method('DELETE')
+                        <div class="modal-header">
+                            <h5 class="modal-title fw-bold text-dark">Hapus Unit Padal</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body text-start p-4">
+                            <p class="mb-2">Apakah Anda yakin ingin menghapus Unit Padal <strong>{{ $padal->nama_padal }}</strong>?</p>
+                            <p class="small text-muted mb-0">Tindakan ini tidak dapat dibatalkan jika unit sudah memiliki relasi tiket penugasan.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-danger">Hapus</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @empty
+        <div class="card">
+            <div class="card-body p-5 text-center text-muted">
+                Belum ada unit Padal yang terdaftar. Silakan klik tombol "Tambah Unit Padal" untuk membuat unit baru.
+            </div>
+        </div>
+    @endforelse
+</div>
+
+@if($padals->hasPages())
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <span class="small text-muted">
+            Menampilkan {{ $padals->firstItem() }}-{{ $padals->lastItem() }} dari {{ $padals->total() }} unit
+        </span>
+        <div>
+            {{ $padals->links() }}
+        </div>
+    </div>
+@endif
 @endsection

@@ -1,126 +1,106 @@
 @extends('layouts.app')
 
 @section('title', 'Buat Laporan Baru')
-@section('page_title', 'Form Pengaduan Kendala IT')
-@section('page_subtitle', 'Sampaikan permasalahan teknologi informasi pada satuan kerja Anda')
+@section('page_title', 'Buat Laporan Baru')
+@section('page_subtitle', 'Kelola layanan IT dengan informasi yang jelas.')
 
 @section('content')
-<div class="row justify-content-center">
-    <div class="col-lg-9">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
-                <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-pencil-square text-primary me-2"></i> Formulir Pelaporan Gangguan IT</h6>
-                <a href="{{ route('user.tickets.index') }}" class="btn btn-sm btn-outline-secondary">
-                    <i class="bi bi-arrow-left me-1"></i> Kembali ke Daftar
-                </a>
+<div class="card">
+    <div class="card-body p-4">
+        <form action="{{ route('user.tickets.store') }}" method="POST" enctype="multipart/form-data">
+            @csrf
+
+            <div class="mb-3">
+                <label class="form-label">Nama Pelapor / Satuan Kerja</label>
+                <input type="text" class="form-control bg-light" 
+                       value="{{ Auth::user()->name }} (NRP/NIP: {{ Auth::user()->nrp_nip ?? '-' }}) / {{ Auth::user()->satuan_kerja ?? 'POLDA' }}" disabled>
             </div>
-            <div class="card-body p-4">
-                <form action="{{ route('user.tickets.store') }}" method="POST" enctype="multipart/form-data">
-                    @csrf
 
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold small text-secondary">Nama Pelapor</label>
-                            <input type="text" class="form-control bg-light" value="{{ Auth::user()->name }} (NRP/NIP: {{ Auth::user()->nrp_nip }})" disabled>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold small text-secondary">Satuan Kerja / Bagian</label>
-                            <input type="text" class="form-control bg-light" value="{{ Auth::user()->satuan_kerja ?? 'POLDA' }}" disabled>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="category" class="form-label fw-semibold small text-secondary">Kategori Gangguan IT <span class="text-danger">*</span></label>
-                        <input type="text" name="category" id="category" class="form-control @error('category') is-invalid @enderror"
-                            value="{{ old('category') }}" maxlength="255" required
-                            placeholder="Contoh: Gangguan Jaringan Internet">
-                        @error('category')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-                    <div class="row g-3 mb-3">
-                        <div class="col-12 col-md-4">
-                            <label for="event_date" class="form-label fw-semibold small text-secondary">Tanggal Kegiatan <span class="text-danger">*</span></label>
-                            <input type="date" name="event_date" id="event_date" class="form-control @error('event_date') is-invalid @enderror"
-                                value="{{ old('event_date') }}" required>
-                            @error('event_date')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="col-6 col-md-4">
-                            <label for="event_start_time" class="form-label fw-semibold small text-secondary">Jam Mulai <span class="text-danger">*</span></label>
-                            <input type="time" name="event_start_time" id="event_start_time" class="form-control @error('event_start_time') is-invalid @enderror"
-                                value="{{ old('event_start_time') }}" required>
-                            @error('event_start_time')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="col-6 col-md-4">
-                            <label for="event_end_time" class="form-label fw-semibold small text-secondary">Jam Selesai <span class="text-danger">*</span></label>
-                            <input type="time" name="event_end_time" id="event_end_time" class="form-control @error('event_end_time') is-invalid @enderror"
-                                value="{{ old('event_end_time') }}" required>
-                            @error('event_end_time')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="title" class="form-label fw-semibold small text-secondary">Judul Laporan Permasalahan <span class="text-danger">*</span></label>
-                        <input type="text" name="title" id="title" class="form-control @error('title') is-invalid @enderror" 
-                               value="{{ old('title') }}" placeholder="contoh: Jaringan internet LAN di ruang SPKT terputus" required>
-                        @error('title')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="location" class="form-label fw-semibold small text-secondary">Lokasi Spesifik / Ruangan / Satker <span class="text-danger">*</span></label>
-                        <input type="text" name="location" id="location" class="form-control @error('location') is-invalid @enderror" 
-                               value="{{ old('location', Auth::user()->satuan_kerja) }}" placeholder="contoh: Gedung A Lantai 2, Ruang Riksa Ditreskrimum" required>
-                        <small class="text-muted">Tuliskan ruangan atau letak perangkat secara spesifik untuk mempermudah teknisi.</small>
-                        @error('location')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="description" class="form-label fw-semibold small text-secondary">Deskripsi Rinci Permasalahan <span class="text-danger">*</span></label>
-                        <textarea name="description" id="description" rows="5" class="form-control @error('description') is-invalid @enderror" 
-                                  placeholder="Jelaskan kendala yang dialami, sejak kapan terjadi, pesan kesalahan (jika ada), dan perangkat yang terdampak..." required>{{ old('description') }}</textarea>
-                        @error('description')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="mb-4">
-                        <label for="attachment" class="form-label fw-semibold small text-secondary">Lampiran Foto Bukti / Berkas (Opsional)</label>
-                        <input type="file" name="attachment" id="attachment" class="form-control @error('attachment') is-invalid @enderror" accept=".jpg,.jpeg,.png,.pdf">
-                        <small class="text-muted">Format yang didukung: JPG, PNG, PDF. Ukuran berkas maksimal 5 MB.</small>
-                        @error('attachment')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="p-3 bg-light rounded-3 border mb-4">
-                        <div class="d-flex align-items-start gap-2">
-                            <i class="bi bi-info-circle-fill text-primary fs-5 mt-1"></i>
-                            <div class="small text-secondary">
-                                <strong>Ketentuan Pelaporan:</strong>
-                                Laporan Anda akan diperiksa dan diverifikasi oleh Administrator Bid TIK sebelum diteruskan kepada Perwira Pengendali (Padal) dan tim Teknisi. Anda dapat memantau status secara berkala melalui menu Laporan Saya.
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="d-flex justify-content-between align-items-center">
-                        <a href="{{ route('user.tickets.index') }}" class="btn btn-outline-secondary">Batal</a>
-                        <button type="submit" class="btn btn-primary px-4 fw-semibold">
-                            <i class="bi bi-send-fill me-1"></i> Kirim Laporan Sekarang
-                        </button>
-                    </div>
-                </form>
+            <div class="mb-3">
+                <label for="category" class="form-label">Kategori Gangguan IT <span class="text-danger">*</span></label>
+                <input type="text" name="category" id="category" class="form-control @error('category') is-invalid @enderror"
+                       value="{{ old('category') }}" maxlength="255" required
+                       placeholder="Gangguan Jaringan Internet">
+                @error('category')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
             </div>
-        </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-12 col-md-4">
+                    <label for="event_date" class="form-label">Tanggal Kegiatan <span class="text-danger">*</span></label>
+                    <input type="date" name="event_date" id="event_date" class="form-control @error('event_date') is-invalid @enderror"
+                           value="{{ old('event_date') }}" required>
+                    @error('event_date')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div class="col-6 col-md-4">
+                    <label for="event_start_time" class="form-label">Jam Mulai <span class="text-danger">*</span></label>
+                    <input type="time" name="event_start_time" id="event_start_time" class="form-control @error('event_start_time') is-invalid @enderror"
+                           value="{{ old('event_start_time') }}" required>
+                    @error('event_start_time')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div class="col-6 col-md-4">
+                    <label for="event_end_time" class="form-label">Jam Selesai <span class="text-danger">*</span></label>
+                    <input type="time" name="event_end_time" id="event_end_time" class="form-control @error('event_end_time') is-invalid @enderror"
+                           value="{{ old('event_end_time') }}" required>
+                    @error('event_end_time')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="title" class="form-label">Judul Laporan Permasalahan <span class="text-danger">*</span></label>
+                <input type="text" name="title" id="title" class="form-control @error('title') is-invalid @enderror" 
+                       value="{{ old('title') }}" placeholder="Jaringan LAN ruang SPKT terputus" required>
+                @error('title')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="mb-3">
+                <label for="location" class="form-label">Lokasi Spesifik / Ruangan / Satker <span class="text-danger">*</span></label>
+                <input type="text" name="location" id="location" class="form-control @error('location') is-invalid @enderror" 
+                       value="{{ old('location', Auth::user()->satuan_kerja) }}" placeholder="Gedung utama, ruang SPKT" required>
+                @error('location')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="mb-3">
+                <label for="description" class="form-label">Deskripsi Rinci Permasalahan <span class="text-danger">*</span></label>
+                <textarea name="description" id="description" rows="5" class="form-control @error('description') is-invalid @enderror" 
+                          placeholder="Koneksi LAN terputus sejak pagi. Perangkat tidak dapat mengakses aplikasi internal." required>{{ old('description') }}</textarea>
+                @error('description')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="mb-4">
+                <label for="attachment" class="form-label">Lampiran Foto Bukti / Berkas (Opsional)</label>
+                <input type="file" name="attachment" id="attachment" class="form-control @error('attachment') is-invalid @enderror" accept=".jpg,.jpeg,.png,.pdf">
+                <div class="form-text">Pilih berkas • JPG, PNG, PDF • Maks. 5 MB</div>
+                @error('attachment')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="alert alert-info mb-4" role="alert">
+                <strong class="d-block mb-1">Ketentuan Pelaporan</strong>
+                <span>Laporan diperiksa dan diverifikasi Administrator Bid TIK sebelum diteruskan kepada Padal dan tim teknisi. Pantau melalui Laporan Saya.</span>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center gap-3">
+                <a href="{{ route('user.tickets.index') }}" class="btn btn-outline-secondary">Batal</a>
+                <button type="submit" class="btn btn-primary px-4">
+                    Kirim Laporan Sekarang
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 @endsection

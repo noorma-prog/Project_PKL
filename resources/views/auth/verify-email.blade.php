@@ -3,29 +3,28 @@
 @section('title', 'Verifikasi Email')
 
 @section('content')
-<div class="text-center mb-4">
-    <div class="mb-3">
-        <i class="bi bi-envelope-check text-primary" style="font-size: 3rem;"></i>
+<div class="mb-4">
+    <h3 class="auth-form-title">Verifikasi Email</h3>
+    <p class="auth-form-sub">Sistem Helpdesk & Pelayanan Teknologi Informasi</p>
+</div>
+
+<div class="alert alert-info d-flex align-items-start gap-3 mb-4" role="alert">
+    <i class="bi bi-info-circle-fill fs-5 mt-1"></i>
+    <div>
+        <strong class="d-block mb-1">Periksa kotak masuk email</strong>
+        <span>Tautan dikirim ke <strong>{{ auth()->user()->email }}</strong>. Periksa juga folder Spam atau Promosi.</span>
     </div>
-    <h4 class="fw-bold text-dark mb-2">Verifikasi Alamat Email</h4>
-    <p class="text-muted small">
-        Verifikasi alamat email diperlukan sebelum Anda dapat menggunakan akun. Jika belum menerima tautan, Anda dapat meminta pengiriman ulang.
-    </p>
-    <p class="small mb-0">
-        Tautan verifikasi dikirim ke <strong>{{ auth()->user()->email }}</strong>.
-        Periksa juga folder Spam atau Promosi.
-    </p>
 </div>
 
 <form action="{{ route('verification.send') }}" method="POST">
     @csrf
-    <button type="submit" class="btn btn-police w-100 mb-3">
-        <i class="bi bi-arrow-clockwise me-2"></i>Kirim Ulang Tautan Verifikasi
+    <button type="submit" class="btn btn-primary w-100 mb-3">
+        Kirim Ulang Tautan Verifikasi
     </button>
 </form>
 
 <form action="{{ route('logout') }}" method="POST" class="text-center">
     @csrf
-    <button type="submit" class="btn btn-link btn-sm text-decoration-none">Kembali ke Login</button>
+    <button type="submit" class="btn btn-outline-secondary w-100">Kembali ke Login</button>
 </form>
 @endsection

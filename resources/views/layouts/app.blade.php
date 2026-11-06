@@ -15,6 +15,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- LayanIT Civic Blue Theme -->
+    <link rel="stylesheet" href="{{ asset('css/redesign.css') }}">
 
     <style>
         :root {
@@ -498,7 +500,7 @@
     </style>
     @yield('styles')
 </head>
-<body>
+<body data-design="A">
 
     <!-- Sidebar Navigation -->
     <button type="button" class="sidebar-overlay d-none" id="sidebarOverlay" aria-label="Tutup menu navigasi" onclick="closeSidebar()"></button>
@@ -621,23 +623,28 @@
                 <button class="btn btn-light d-lg-none" type="button" aria-label="Buka menu navigasi" aria-controls="sidebar" aria-expanded="false" onclick="toggleSidebar()">
                     <i class="bi bi-list fs-5"></i>
                 </button>
-                <div>
-                    <h5 class="mb-0 fw-bold text-dark">@yield('page_title', 'Dashboard')</h5>
-                    <small class="text-muted d-none d-md-block">@yield('page_subtitle', 'Sistem Helpdesk IT POLDA')</small>
-                </div>
+                <span class="topbar-service-label d-none d-lg-inline">LAYANAN TEKNOLOGI INFORMASI</span>
             </div>
 
             <div class="d-flex align-items-center gap-3">
-                <span class="badge rounded-pill px-3 py-2 text-uppercase fw-bold role-badge role-badge-{{ Auth::user()->role }}">
-                    Role: {{ Auth::user()->role }}
-                </span>
+                @php
+                    $roleLabel = match(Auth::user()->role) {
+                        'admin' => 'Administrator',
+                        'padal' => 'Padal',
+                        'teknisi' => 'Teknisi',
+                        default => 'Pelapor',
+                    };
+                @endphp
+                <div class="topbar-user-badge">
+                    <span>AS / {{ $roleLabel }}</span>
+                </div>
 
                 <div class="dropdown">
                     <button class="btn btn-light rounded-circle p-2 d-flex align-items-center justify-content-center" 
-                            style="width: 42px; height: 42px;" data-bs-toggle="dropdown" aria-expanded="false">
+                            style="width: 40px; height: 40px; border: 1px solid var(--civic-line);" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Menu profil pengguna">
                         <i class="bi bi-person-fill fs-5 text-secondary"></i>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border mt-2" style="border-radius: 10px;">
                         <li class="px-3 py-2 border-bottom">
                             <div class="fw-bold">{{ Auth::user()->name }}</div>
                             <small class="text-muted">{{ Auth::user()->email }}</small>
@@ -659,6 +666,10 @@
 
         <!-- Page Content -->
         <main class="content-area">
+            <div class="page-header mb-4">
+                <h1 class="page-title">@yield('page_title', 'Dashboard')</h1>
+                <p class="page-subtitle text-muted mb-0">@yield('page_subtitle', 'Kelola layanan IT dengan informasi yang jelas.')</p>
+            </div>
             @if(session('success'))
                 <div class="alert alert-success alert-dismissible fade show d-flex align-items-center shadow-sm" role="alert">
                     <i class="bi bi-check-circle-fill me-2 fs-5"></i>

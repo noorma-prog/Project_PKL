@@ -2,86 +2,73 @@
 
 @section('title', 'Detail Pengguna')
 @section('page_title', 'Detail Pengguna')
-@section('page_subtitle', 'Informasi akun dan keterkaitan dengan aktivitas LayanIT')
+@section('page_subtitle', 'Kelola layanan IT dengan informasi yang jelas.')
 
 @section('content')
-<div class="row justify-content-center">
-    <div class="col-lg-8">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-person-badge text-primary me-2"></i>Detail Akun</h6>
-                <a href="{{ route('admin.users.index') }}" class="btn btn-sm btn-outline-secondary">
-                    <i class="bi bi-arrow-left me-1"></i> Kembali
-                </a>
+<div class="mb-3">
+    <a href="{{ route('admin.users.index') }}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Kembali ke Daftar
+    </a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body p-4">
+        <h4 class="fw-bold text-dark mb-4">{{ $user->name }}</h4>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-6">
+                <small class="text-muted d-block">Email</small>
+                <span class="text-dark fw-semibold">{{ $user->email }}</span>
             </div>
-            <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-start mb-4">
-                    <div>
-                        <h5 class="fw-bold mb-1">{{ $user->name }}</h5>
-                        <div class="text-muted small">{{ $user->email }}</div>
-                    </div>
-                    <span class="badge role-badge-{{ $user->role }} text-uppercase">{{ $user->role }}</span>
-                </div>
-
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <div class="border rounded p-3 h-100">
-                            <div class="text-muted small mb-1">NRP / NIP</div>
-                            <div class="fw-semibold">{{ $user->nrp_nip ?? '-' }}</div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="border rounded p-3 h-100">
-                            <div class="text-muted small mb-1">Status Akun</div>
-                            <div class="fw-semibold text-{{ $user->is_active ? 'success' : 'danger' }}">
-                                @if(in_array($user->role, ['padal', 'teknisi'], true) && !$user->is_active && !$user->hasVerifiedEmail() && $user->requiresEmailVerification())
-                                    Menunggu Aktivasi
-                                @else
-                                    {{ $user->is_active ? 'Aktif' : 'Nonaktif' }}
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="border rounded p-3 h-100">
-                            <div class="text-muted small mb-1">Satuan Kerja</div>
-                            <div class="fw-semibold">{{ $user->satuan_kerja ?? '-' }}</div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="border rounded p-3 h-100">
-                            <div class="text-muted small mb-1">No. WhatsApp / HP</div>
-                            <div class="fw-semibold">{{ $user->phone_number ?? '-' }}</div>
-                        </div>
-                    </div>
-                    <div class="col-12">
-                        <div class="border rounded p-3">
-                            <div class="text-muted small mb-1">Alamat</div>
-                            <div class="fw-semibold">{{ $user->alamat ?? '-' }}</div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="border rounded p-3 h-100">
-                            <div class="text-muted small mb-1">Jumlah Laporan</div>
-                            <div class="fw-semibold">{{ $user->tickets_count }}</div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="border rounded p-3 h-100">
-                            <div class="text-muted small mb-1">Keanggotaan Padal</div>
-                            <div class="fw-semibold">{{ $user->padal_teams_count }}</div>
-                        </div>
-                    </div>
-                </div>
-
-                @if($user->role !== 'admin')
-                    <div class="d-flex justify-content-end gap-2 mt-4">
-                        <a href="{{ route('admin.users.edit', $user->id) }}" class="btn btn-primary">
-                            <i class="bi bi-pencil me-1"></i> Edit Pengguna
-                        </a>
-                    </div>
+            <div class="col-md-6">
+                <small class="text-muted d-block">Peran</small>
+                <span class="badge role-badge-{{ $user->role }} text-uppercase">{{ $user->role }}</span>
+            </div>
+            <div class="col-md-6">
+                <small class="text-muted d-block">NRP / NIP</small>
+                <span class="text-dark fw-semibold">{{ $user->nrp_nip ?? '-' }}</span>
+            </div>
+            <div class="col-md-6">
+                <small class="text-muted d-block">Satuan Kerja</small>
+                <span class="text-dark fw-semibold">{{ $user->satuan_kerja ?? '-' }}</span>
+            </div>
+            <div class="col-md-6">
+                <small class="text-muted d-block">Nomor Telepon / WhatsApp</small>
+                <span class="text-dark">{{ $user->phone_number ?? '-' }}</span>
+            </div>
+            <div class="col-md-6">
+                <small class="text-muted d-block">Status</small>
+                @if(in_array($user->role, ['padal', 'teknisi'], true) && !$user->is_active && !$user->hasVerifiedEmail() && $user->requiresEmailVerification())
+                    <span class="text-warning fw-semibold">Belum aktif / menunggu aktivasi email</span>
+                @elseif($user->is_active)
+                    <span class="text-success fw-semibold">Aktif</span>
+                @else
+                    <span class="text-danger fw-semibold">Nonaktif</span>
                 @endif
             </div>
+            @if($user->alamat)
+                <div class="col-12">
+                    <small class="text-muted d-block">Alamat</small>
+                    <span class="text-dark">{{ $user->alamat }}</span>
+                </div>
+            @endif
+        </div>
+
+        <div class="d-flex flex-wrap gap-2 pt-2 border-top">
+            @if(in_array($user->role, ['padal', 'teknisi'], true) && !$user->is_active && !$user->hasVerifiedEmail() && $user->requiresEmailVerification() && $user->approval_status === 'active')
+                <form action="{{ route('admin.users.activation-invitation', $user->id) }}" method="POST" class="d-inline">
+                    @csrf
+                    <button type="submit" class="btn btn-primary">
+                        Kirim Undangan Aktivasi
+                    </button>
+                </form>
+            @endif
+
+            @if($user->role !== 'admin')
+                <a href="{{ route('admin.users.edit', $user->id) }}" class="btn btn-outline-secondary">
+                    Ubah Pengguna
+                </a>
+            @endif
         </div>
     </div>
 </div>

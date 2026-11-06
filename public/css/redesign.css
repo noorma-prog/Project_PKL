@@ -1,0 +1,1182 @@
+/* ==========================================================================
+   LayanIT - Civic Blue (Proposal A) Design System
+   Document reference: Pemetaan dan Panduan Implementasi Civic Blue
+   ========================================================================== */
+
+:root {
+    --civic-primary: #234ED8;
+    --civic-primary-hover: #1e40af;
+    --civic-primary-active: #1d3bb8;
+    --civic-ink: #17243C;
+    --civic-muted: #55647A;
+    --civic-bg: #F3F6FB;
+    --civic-surface: #FFFFFF;
+    --civic-line: #DCE3ED;
+    --civic-soft: #EBF0FF;
+    --civic-sidebar-navy: #0F1D38;
+    --civic-sidebar-dark: #17243C;
+
+    /* Status Tokens */
+    --civic-status-warning-bg: #FEF3C7;
+    --civic-status-warning-text: #92400E;
+    --civic-status-warning-border: #FDE68A;
+
+    --civic-status-danger-bg: #FEE2E2;
+    --civic-status-danger-text: #991B1B;
+    --civic-status-danger-border: #FECACA;
+
+    --civic-status-info-bg: #DBEAFE;
+    --civic-status-info-text: #1E40AF;
+    --civic-status-info-border: #BFDBFE;
+
+    --civic-status-success-bg: #D1FAE5;
+    --civic-status-success-text: #065F46;
+    --civic-status-success-border: #A7F3D0;
+
+    --civic-status-done-bg: #D1FAE5;
+    --civic-status-done-text: #047857;
+    --civic-status-done-border: #6EE7B7;
+
+    /* Geometry Tokens */
+    --civic-sidebar-width: 248px;
+    --civic-topbar-h-desktop: 76px;
+    --civic-topbar-h-mobile: 72px;
+
+    --civic-radius-card: 12px;
+    --civic-radius-btn: 10px;
+    --civic-radius-input: 8px;
+    --civic-radius-badge: 6px;
+
+    --civic-control-height: 48px;
+    --civic-touch-min: 44px;
+
+    /* Typography */
+    --civic-font: Arial, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+}
+
+/* Base Document Reset & Typography */
+body[data-design="A"] {
+    font-family: var(--civic-font);
+    background-color: var(--civic-bg);
+    color: var(--civic-ink);
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body[data-design="A"] * {
+    box-sizing: border-box;
+}
+
+body[data-design="A"] h1,
+body[data-design="A"] .h1 {
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--civic-ink);
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+}
+
+body[data-design="A"] h2,
+body[data-design="A"] .h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--civic-ink);
+}
+
+body[data-design="A"] h3,
+body[data-design="A"] .h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--civic-ink);
+}
+
+body[data-design="A"] h4,
+body[data-design="A"] .h4 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--civic-ink);
+}
+
+body[data-design="A"] h5,
+body[data-design="A"] .h5 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--civic-ink);
+}
+
+body[data-design="A"] h6,
+body[data-design="A"] .h6 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--civic-ink);
+}
+
+body[data-design="A"] p,
+body[data-design="A"] .body-text {
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--civic-ink);
+}
+
+body[data-design="A"] .text-muted,
+body[data-design="A"] .page-subtitle {
+    color: var(--civic-muted) !important;
+    font-size: 14px;
+    line-height: 20px;
+}
+
+body[data-design="A"] .small,
+body[data-design="A"] small {
+    font-size: 12px;
+    line-height: 18px;
+}
+
+/* Accessibility Focus Outline */
+body[data-design="A"] a:focus-visible,
+body[data-design="A"] button:focus-visible,
+body[data-design="A"] input:focus-visible,
+body[data-design="A"] select:focus-visible,
+body[data-design="A"] textarea:focus-visible {
+    outline: 2px solid var(--civic-primary) !important;
+    outline-offset: 2px !important;
+}
+
+/* ==========================================================================
+   Shell Layout: Sidebar, Topbar, Main Container
+   ========================================================================== */
+
+/* Fixed Desktop Sidebar */
+body[data-design="A"] .sidebar {
+    width: var(--civic-sidebar-width);
+    background: var(--civic-sidebar-navy);
+    min-height: 100vh;
+    min-height: 100dvh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1030;
+    transition: transform 0.25s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: none;
+}
+
+body[data-design="A"] .sidebar-brand {
+    height: var(--civic-topbar-h-desktop);
+    padding: 0 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.12);
+}
+
+body[data-design="A"] .sidebar-brand .logo-icon {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+body[data-design="A"] .sidebar-brand .logo-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+body[data-design="A"] .sidebar-brand .brand-title {
+    color: #FFFFFF;
+    font-weight: 700;
+    font-size: 1.15rem;
+    line-height: 1.2;
+    margin: 0;
+}
+
+body[data-design="A"] .sidebar-brand .brand-sub {
+    color: #94A3B8;
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1.2;
+    margin: 0;
+}
+
+body[data-design="A"] .sidebar-nav {
+    padding: 1.25rem 0.85rem;
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+body[data-design="A"] .nav-section-title {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    color: #64748B;
+    padding: 0.5rem 0.75rem 0.25rem;
+    margin-top: 0.85rem;
+}
+
+body[data-design="A"] .sidebar .nav-link {
+    color: #CBD5E1;
+    padding: 0.65rem 0.85rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 500;
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+    min-height: var(--civic-touch-min);
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+body[data-design="A"] .sidebar .nav-link i {
+    font-size: 1.1rem;
+    color: #94A3B8;
+    transition: color 0.15s ease;
+}
+
+body[data-design="A"] .sidebar .nav-link:hover {
+    color: #FFFFFF;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+body[data-design="A"] .sidebar .nav-link:hover i {
+    color: #FFFFFF;
+}
+
+body[data-design="A"] .sidebar .nav-link.active {
+    color: #FFFFFF;
+    background: var(--civic-primary);
+    font-weight: 600;
+    box-shadow: none;
+}
+
+body[data-design="A"] .sidebar .nav-link.active i {
+    color: #FFFFFF;
+}
+
+body[data-design="A"] .sidebar-footer {
+    padding: 1rem 1.25rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.15);
+}
+
+/* Main Content Area */
+body[data-design="A"] .main-wrapper {
+    margin-left: var(--civic-sidebar-width);
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--civic-bg);
+}
+
+/* Topbar Header */
+body[data-design="A"] .topbar {
+    height: var(--civic-topbar-h-desktop);
+    background: var(--civic-surface);
+    border-bottom: 1px solid var(--civic-line);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+    box-shadow: none;
+}
+
+body[data-design="A"] .topbar-service-label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--civic-muted);
+}
+
+body[data-design="A"] .topbar-user-badge {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--civic-ink);
+    padding: 6px 12px;
+    background: var(--civic-bg);
+    border: 1px solid var(--civic-line);
+    border-radius: var(--civic-radius-badge);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+body[data-design="A"] .content-area {
+    padding: 24px 32px 48px;
+    max-width: 1128px;
+    width: 100%;
+    margin: 0;
+    flex-grow: 1;
+}
+
+/* ==========================================================================
+   Cards & Surfaces (Tanpa bayangan dekoratif, 1px line, radius 12px)
+   ========================================================================== */
+
+body[data-design="A"] .card {
+    background: var(--civic-surface);
+    border: 1px solid var(--civic-line);
+    border-radius: var(--civic-radius-card);
+    box-shadow: none !important;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+body[data-design="A"] .card-header {
+    background: var(--civic-surface);
+    border-bottom: 1px solid var(--civic-line);
+    padding: 14px 20px;
+    font-weight: 700;
+    color: var(--civic-ink);
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+body[data-design="A"] .card-body {
+    padding: 20px;
+}
+
+body[data-design="A"] .card-footer {
+    background: var(--civic-surface);
+    border-top: 1px solid var(--civic-line);
+    padding: 12px 20px;
+}
+
+/* ==========================================================================
+   Stat Cards (Tinggi 96px, 1px line, bold 30px / 12px)
+   ========================================================================== */
+
+body[data-design="A"] .stat-card {
+    height: 96px;
+    min-height: 96px;
+    background: var(--civic-surface);
+    border: 1px solid var(--civic-line);
+    border-radius: var(--civic-radius-card);
+    padding: 14px 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-decoration: none;
+    transition: border-color 0.15s ease;
+    box-shadow: none !important;
+    margin-bottom: 0;
+}
+
+body[data-design="A"] .stat-card:hover {
+    border-color: var(--civic-primary);
+}
+
+body[data-design="A"] .stat-card .stat-label,
+body[data-design="A"] .stat-card span.small {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--civic-muted) !important;
+    line-height: 1.2;
+    margin-bottom: 4px;
+    text-transform: none;
+}
+
+body[data-design="A"] .stat-card .stat-value,
+body[data-design="A"] .stat-card h3 {
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--civic-primary);
+    margin: 0;
+    letter-spacing: -0.02em;
+}
+
+body[data-design="A"] .stat-card .stat-icon {
+    display: none; /* Bersih sesuai desain Civic Blue flat */
+}
+
+/* Grid layout helper for stats */
+body[data-design="A"] .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+/* ==========================================================================
+   Jadwal Kegiatan Terdekat (151px desktop / 170px mobile)
+   ========================================================================== */
+
+body[data-design="A"] .schedule-card {
+    background: var(--civic-surface);
+    border: 1px solid var(--civic-line);
+    border-radius: var(--civic-radius-card);
+    padding: 16px 20px;
+    margin-bottom: 20px;
+}
+
+body[data-design="A"] .schedule-card-header {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--civic-ink);
+    margin-bottom: 12px;
+}
+
+body[data-design="A"] .schedule-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 14px;
+    background: var(--civic-bg);
+    border: 1px solid var(--civic-line);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--civic-ink);
+    transition: background 0.15s ease;
+}
+
+body[data-design="A"] .schedule-item:hover {
+    background: #EAEFF7;
+}
+
+body[data-design="A"] .schedule-date-badge {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    background: var(--civic-soft);
+    border: 1px solid #C7D7FE;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    line-height: 1;
+}
+
+body[data-design="A"] .schedule-date-badge .day {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--civic-primary);
+}
+
+body[data-design="A"] .schedule-date-badge .month {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--civic-primary);
+    margin-top: 2px;
+}
+
+body[data-design="A"] .schedule-info {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+body[data-design="A"] .schedule-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--civic-ink);
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+body[data-design="A"] .schedule-meta {
+    font-size: 12px;
+    color: var(--civic-muted);
+}
+
+/* ==========================================================================
+   Buttons (Tinggi 48px, radius 10px, font 14px 600, target sentuh min 44px)
+   ========================================================================== */
+
+body[data-design="A"] .btn {
+    min-height: var(--civic-control-height);
+    border-radius: var(--civic-radius-btn);
+    font-family: var(--civic-font);
+    font-size: 14px;
+    font-weight: 600;
+    padding: 0 1.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.15s ease;
+    box-shadow: none !important;
+    text-decoration: none;
+}
+
+body[data-design="A"] .btn-primary,
+body[data-design="A"] .btn-police {
+    background-color: var(--civic-primary) !important;
+    border-color: var(--civic-primary) !important;
+    color: #FFFFFF !important;
+}
+
+body[data-design="A"] .btn-primary:hover,
+body[data-design="A"] .btn-police:hover {
+    background-color: var(--civic-primary-hover) !important;
+    border-color: var(--civic-primary-hover) !important;
+    color: #FFFFFF !important;
+}
+
+body[data-design="A"] .btn-primary:active,
+body[data-design="A"] .btn-police:active {
+    background-color: var(--civic-primary-active) !important;
+    border-color: var(--civic-primary-active) !important;
+}
+
+body[data-design="A"] .btn-outline-primary {
+    background-color: #FFFFFF;
+    border-color: var(--civic-primary);
+    color: var(--civic-primary);
+}
+
+body[data-design="A"] .btn-outline-primary:hover {
+    background-color: var(--civic-soft);
+    color: var(--civic-primary);
+    border-color: var(--civic-primary);
+}
+
+body[data-design="A"] .btn-outline-secondary,
+body[data-design="A"] .btn-light {
+    background-color: #FFFFFF;
+    border: 1px solid var(--civic-line);
+    color: var(--civic-ink);
+}
+
+body[data-design="A"] .btn-outline-secondary:hover,
+body[data-design="A"] .btn-light:hover {
+    background-color: var(--civic-bg);
+    border-color: #CBD5E1;
+    color: var(--civic-ink);
+}
+
+body[data-design="A"] .btn-danger {
+    background-color: var(--civic-danger) !important;
+    border-color: var(--civic-danger) !important;
+    color: #FFFFFF !important;
+}
+
+body[data-design="A"] .btn-danger:hover {
+    background-color: #B91C1C !important;
+    border-color: #B91C1C !important;
+}
+
+body[data-design="A"] .btn-warning {
+    background-color: var(--civic-warning) !important;
+    border-color: var(--civic-warning) !important;
+    color: #FFFFFF !important;
+}
+
+body[data-design="A"] .btn-warning:hover {
+    background-color: #B45309 !important;
+    border-color: #B45309 !important;
+}
+
+body[data-design="A"] .btn-success {
+    background-color: var(--civic-success) !important;
+    border-color: var(--civic-success) !important;
+    color: #FFFFFF !important;
+}
+
+body[data-design="A"] .btn-success:hover {
+    background-color: #047857 !important;
+    border-color: #047857 !important;
+}
+
+body[data-design="A"] .btn-sm {
+    min-height: 38px;
+    height: 38px;
+    font-size: 13px;
+    padding: 0 14px;
+    border-radius: 8px;
+}
+
+body[data-design="A"] .btn-disabled,
+body[data-design="A"] .btn:disabled,
+body[data-design="A"] .btn.disabled {
+    background-color: #E4E7EC !important;
+    border-color: #D0D5DD !important;
+    color: #667085 !important;
+    cursor: not-allowed;
+    opacity: 1;
+}
+
+/* ==========================================================================
+   Form Controls (Tinggi 48px, radius 8px, border #DCE3ED)
+   ========================================================================== */
+
+body[data-design="A"] .form-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--civic-ink);
+    margin-bottom: 6px;
+    display: block;
+}
+
+body[data-design="A"] .form-control,
+body[data-design="A"] .form-select {
+    min-height: var(--civic-control-height);
+    height: var(--civic-control-height);
+    border-radius: var(--civic-radius-input);
+    border: 1px solid var(--civic-line);
+    padding: 0 14px;
+    font-size: 14px;
+    color: var(--civic-ink);
+    background-color: #FFFFFF;
+    box-shadow: none !important;
+    transition: border-color 0.15s ease;
+}
+
+body[data-design="A"] textarea.form-control {
+    min-height: 100px;
+    height: auto;
+    padding: 12px 14px;
+}
+
+body[data-design="A"] .form-control:focus,
+body[data-design="A"] .form-select:focus {
+    border-color: var(--civic-primary);
+    background-color: #FFFFFF;
+}
+
+body[data-design="A"] .form-control.is-invalid,
+body[data-design="A"] .form-select.is-invalid {
+    border-color: var(--civic-danger) !important;
+}
+
+body[data-design="A"] .invalid-feedback,
+body[data-design="A"] .text-danger.small {
+    font-size: 13px;
+    color: var(--civic-danger) !important;
+    margin-top: 4px;
+}
+
+body[data-design="A"] .form-text {
+    font-size: 12px;
+    color: var(--civic-muted);
+    margin-top: 4px;
+}
+
+/* ==========================================================================
+   Status Badges (7 status tiket konsisten dari Ticket.php)
+   ========================================================================== */
+
+body[data-design="A"] .badge {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: var(--civic-radius-badge);
+    letter-spacing: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Status: Menunggu Verifikasi Admin & Menunggu Konfirmasi Padal */
+body[data-design="A"] .badge.bg-warning,
+body[data-design="A"] .badge-status-warning {
+    background-color: var(--civic-status-warning-bg) !important;
+    color: var(--civic-status-warning-text) !important;
+    border: 1px solid var(--civic-status-warning-border) !important;
+}
+
+/* Status: Ditolak Admin & Ditolak Padal */
+body[data-design="A"] .badge.bg-danger,
+body[data-design="A"] .badge.bg-secondary,
+body[data-design="A"] .badge-status-danger {
+    background-color: var(--civic-status-danger-bg) !important;
+    color: var(--civic-status-danger-text) !important;
+    border: 1px solid var(--civic-status-danger-border) !important;
+}
+
+/* Status: Dalam Penanganan */
+body[data-design="A"] .badge.bg-primary,
+body[data-design="A"] .badge.bg-info,
+body[data-design="A"] .badge-status-info {
+    background-color: var(--civic-status-info-bg) !important;
+    color: var(--civic-status-info-text) !important;
+    border: 1px solid var(--civic-status-info-border) !important;
+}
+
+/* Status: Selesai (Menunggu Penilaian) & Selesai Dinilai */
+body[data-design="A"] .badge.bg-success,
+body[data-design="A"] .badge.bg-dark,
+body[data-design="A"] .badge-status-success {
+    background-color: var(--civic-status-success-bg) !important;
+    color: var(--civic-status-success-text) !important;
+    border: 1px solid var(--civic-status-success-border) !important;
+}
+
+body[data-design="A"] .badge.bg-light {
+    background-color: var(--civic-bg) !important;
+    color: var(--civic-muted) !important;
+    border: 1px solid var(--civic-line) !important;
+}
+
+/* Role Badges */
+body[data-design="A"] .role-badge {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: var(--civic-radius-badge);
+}
+
+body[data-design="A"] .role-badge-admin {
+    background-color: var(--civic-status-danger-bg);
+    color: var(--civic-status-danger-text);
+    border: 1px solid var(--civic-status-danger-border);
+}
+
+body[data-design="A"] .role-badge-padal {
+    background-color: var(--civic-status-warning-bg);
+    color: var(--civic-status-warning-text);
+    border: 1px solid var(--civic-status-warning-border);
+}
+
+body[data-design="A"] .role-badge-teknisi {
+    background-color: var(--civic-status-info-bg);
+    color: var(--civic-status-info-text);
+    border: 1px solid var(--civic-status-info-border);
+}
+
+body[data-design="A"] .role-badge-user {
+    background-color: var(--civic-soft);
+    color: var(--civic-primary);
+    border: 1px solid #BFDBFE;
+}
+
+/* ==========================================================================
+   Tables & Data Lists (Desktop: header 48px, baris 72-100px; Mobile: cards)
+   ========================================================================== */
+
+body[data-design="A"] .table {
+    margin-bottom: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+}
+
+body[data-design="A"] .table thead th {
+    height: 48px;
+    background-color: #F8FAFC;
+    border-bottom: 1px solid var(--civic-line);
+    color: var(--civic-muted);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0 16px;
+    vertical-align: middle;
+}
+
+body[data-design="A"] .table tbody td {
+    padding: 16px;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--civic-line);
+    font-size: 14px;
+    color: var(--civic-ink);
+}
+
+body[data-design="A"] .table-hover tbody tr:hover td {
+    background-color: #F8FAFD;
+}
+
+/* Ticket number styling */
+body[data-design="A"] .ticket-id {
+    font-family: var(--civic-font);
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--civic-primary);
+}
+
+/* ==========================================================================
+   Alerts & Notifications
+   ========================================================================== */
+
+body[data-design="A"] .alert {
+    border-radius: var(--civic-radius-card);
+    padding: 16px 20px;
+    border: 1px solid transparent;
+    margin-bottom: 20px;
+    font-size: 14px;
+    box-shadow: none !important;
+}
+
+body[data-design="A"] .alert-warning {
+    background-color: var(--civic-status-warning-bg);
+    border-color: var(--civic-status-warning-border);
+    color: var(--civic-status-warning-text);
+}
+
+body[data-design="A"] .alert-danger {
+    background-color: var(--civic-status-danger-bg);
+    border-color: var(--civic-status-danger-border);
+    color: var(--civic-status-danger-text);
+}
+
+body[data-design="A"] .alert-success {
+    background-color: var(--civic-status-success-bg);
+    border-color: var(--civic-status-success-border);
+    color: var(--civic-status-success-text);
+}
+
+body[data-design="A"] .alert-info {
+    background-color: var(--civic-status-info-bg);
+    border-color: var(--civic-status-info-border);
+    color: var(--civic-status-info-text);
+}
+
+/* ==========================================================================
+   Rating System (Aksesibel Keyboard & Touch)
+   ========================================================================== */
+
+body[data-design="A"] .star-rating-civic {
+    display: inline-flex;
+    gap: 8px;
+    margin: 8px 0;
+}
+
+body[data-design="A"] .star-rating-civic input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    pointer-events: none;
+}
+
+body[data-design="A"] .star-rating-civic label {
+    cursor: pointer;
+    font-size: 28px;
+    color: #CBD5E1;
+    line-height: 1;
+    transition: color 0.15s ease;
+    padding: 4px;
+    margin: 0;
+}
+
+body[data-design="A"] .star-rating-civic label:hover,
+body[data-design="A"] .star-rating-civic label:hover ~ label,
+body[data-design="A"] .star-rating-civic input:checked + label,
+body[data-design="A"] .star-rating-civic input:checked + label ~ label {
+    /* Handled via simple flex reverse or JS for full accessibility */
+}
+
+/* ==========================================================================
+   Auth Layout: Split 2 Kolom Desktop, Stack Mobile
+   Latar Belakang Polda Kalsel & Logo LayanIT Wajib Terjaga
+   ========================================================================== */
+
+body[data-design="A"].auth-page {
+    background-image:
+        linear-gradient(rgba(11, 19, 41, 0.82), rgba(23, 37, 84, 0.78)),
+        url("/images/gambar%20polda%20kalsel.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+}
+
+body[data-design="A"] .auth-split-container {
+    width: 100%;
+    max-width: 960px;
+    background: #FFFFFF;
+    border-radius: 16px;
+    overflow: hidden;
+    display: flex;
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+body[data-design="A"] .auth-hero-pane {
+    width: 44%;
+    background: var(--civic-sidebar-navy);
+    color: #FFFFFF;
+    padding: 48px 36px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+body[data-design="A"] .auth-hero-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 36px;
+}
+
+body[data-design="A"] .auth-hero-brand img {
+    width: 44px;
+    height: 44px;
+    object-fit: contain;
+}
+
+body[data-design="A"] .auth-hero-brand .brand-title {
+    color: #FFFFFF;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+body[data-design="A"] .auth-hero-brand .brand-sub {
+    color: #94A3B8;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+
+body[data-design="A"] .auth-hero-heading {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.25;
+    color: #FFFFFF;
+    margin-bottom: 12px;
+}
+
+body[data-design="A"] .auth-hero-desc {
+    color: #94A3B8;
+    font-size: 14px;
+    line-height: 22px;
+    margin-bottom: 32px;
+}
+
+body[data-design="A"] .auth-hero-pill {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    padding: 16px;
+}
+
+body[data-design="A"] .auth-hero-pill .pill-title {
+    color: #FFFFFF;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+body[data-design="A"] .auth-hero-pill .pill-sub {
+    color: #94A3B8;
+    font-size: 12px;
+    margin: 0;
+}
+
+body[data-design="A"] .auth-form-pane {
+    width: 56%;
+    padding: 44px 40px;
+    background: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+body[data-design="A"] .auth-form-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--civic-ink);
+    margin-bottom: 4px;
+}
+
+body[data-design="A"] .auth-form-sub {
+    font-size: 13px;
+    color: var(--civic-muted);
+    margin-bottom: 24px;
+}
+
+/* ==========================================================================
+   Responsive Adaptations (Tablet & Mobile < 992px & < 768px)
+   ========================================================================== */
+
+@media (max-width: 991.98px) {
+    /* Mobile Shell Navigation */
+    body[data-design="A"] .sidebar {
+        width: min(320px, 85vw);
+        transform: translateX(-100%);
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.35);
+    }
+
+    body[data-design="A"] .sidebar.show {
+        transform: translateX(0);
+    }
+
+    body[data-design="A"] .main-wrapper {
+        margin-left: 0;
+    }
+
+    body[data-design="A"] .topbar {
+        height: var(--civic-topbar-h-mobile);
+        padding: 0 16px;
+    }
+
+    body[data-design="A"] .content-area {
+        padding: 20px 16px 36px;
+        max-width: 100%;
+    }
+
+    /* Auth Page on Mobile */
+    body[data-design="A"] .auth-split-container {
+        flex-direction: column;
+        max-width: 480px;
+        border-radius: 12px;
+    }
+
+    body[data-design="A"] .auth-hero-pane {
+        width: 100%;
+        padding: 24px 20px 20px;
+    }
+
+    body[data-design="A"] .auth-hero-brand {
+        margin-bottom: 0;
+    }
+
+    body[data-design="A"] .auth-hero-heading,
+    body[data-design="A"] .auth-hero-desc,
+    body[data-design="A"] .auth-hero-pill {
+        display: none;
+    }
+
+    body[data-design="A"] .auth-form-pane {
+        width: 100%;
+        padding: 28px 20px 32px;
+    }
+
+    body[data-design="A"] .auth-form-title {
+        font-size: 20px;
+    }
+}
+
+@media (max-width: 767.98px) {
+    body[data-design="A"] h1,
+    body[data-design="A"] .h1 {
+        font-size: 26px;
+    }
+
+    /* Stat Cards 2 Kolom Mobile */
+    body[data-design="A"] .stat-grid,
+    body[data-design="A"] .row.g-3.mb-4:has(.stat-card) {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+    }
+
+    body[data-design="A"] .row.g-3.mb-4:has(.stat-card) > [class*="col-"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 1 1 auto !important;
+        padding: 0 !important;
+    }
+
+    body[data-design="A"] .stat-card {
+        height: 96px;
+        min-height: 96px;
+        padding: 12px 14px;
+    }
+
+    body[data-design="A"] .stat-card .stat-value,
+    body[data-design="A"] .stat-card h3 {
+        font-size: 26px;
+    }
+
+    /* Tabel Operasional Berubah Menjadi Kartu di Mobile */
+    body[data-design="A"] .table-responsive:not(.table-formal-preview) > table {
+        display: block;
+        width: 100%;
+        border: 0;
+    }
+
+    body[data-design="A"] .table-responsive:not(.table-formal-preview) > table thead {
+        display: none;
+    }
+
+    body[data-design="A"] .table-responsive:not(.table-formal-preview) > table tbody {
+        display: block;
+        width: 100%;
+    }
+
+    body[data-design="A"] .table-responsive:not(.table-formal-preview) > table tbody > tr:not(.table-empty-row) {
+        display: block;
+        background: #FFFFFF;
+        border: 1px solid var(--civic-line);
+        border-radius: var(--civic-radius-card);
+        padding: 14px 16px;
+        margin-bottom: 12px;
+    }
+
+    body[data-design="A"] .table-responsive:not(.table-formal-preview) > table tbody > tr:not(.table-empty-row) > td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border: 0;
+        border-bottom: 1px solid #F1F5F9;
+        font-size: 13px;
+        text-align: right;
+    }
+
+    body[data-design="A"] .table-responsive:not(.table-formal-preview) > table tbody > tr:not(.table-empty-row) > td::before {
+        content: attr(data-label);
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--civic-muted);
+        text-align: left;
+        padding-right: 12px;
+        flex-shrink: 0;
+    }
+
+    body[data-design="A"] .table-responsive:not(.table-formal-preview) > table tbody > tr:not(.table-empty-row) > td:last-child {
+        border-bottom: 0;
+        padding-top: 12px;
+        justify-content: stretch;
+    }
+
+    body[data-design="A"] .table-responsive:not(.table-formal-preview) > table tbody > tr:not(.table-empty-row) > td:last-child::before {
+        display: none;
+    }
+
+    body[data-design="A"] .table-responsive:not(.table-formal-preview) > table tbody > tr:not(.table-empty-row) > td:last-child .btn {
+        width: 100%;
+    }
+
+    /* Formal Document Table (Preview Rekap Dompdf) tetap tabel dengan scroll horizontal lokal */
+    body[data-design="A"] .table-formal-preview {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border: 1px solid var(--civic-line);
+        border-radius: 8px;
+    }
+
+    body[data-design="A"] .table-formal-preview table {
+        min-width: 800px;
+    }
+
+    /* Modal Mobile */
+    body[data-design="A"] .modal-dialog {
+        margin: 12px;
+    }
+
+    body[data-design="A"] .modal-content {
+        max-height: calc(100dvh - 24px);
+        border-radius: var(--civic-radius-card);
+    }
+}
+

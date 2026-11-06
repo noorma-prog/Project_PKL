@@ -2,25 +2,23 @@
 
 @section('title', 'Dashboard Pelapor')
 @section('page_title', 'Dashboard Pelapor')
-@section('page_subtitle', 'Selamat datang di Sistem Helpdesk LayanIT POLDA')
+@section('page_subtitle', 'Kelola layanan IT dengan informasi yang jelas.')
 
 @section('content')
-<x-ticket-schedule-list :tickets="$scheduleTickets" show-route="user.tickets.show" />
 <!-- Peringatan jika ada laporan yang selesai dan belum dinilai -->
 @if($unratedTickets->isNotEmpty())
-    <div class="alert alert-warning border-warning shadow-sm mb-4" role="alert">
+    <div class="alert alert-warning mb-4" role="alert">
         <div class="d-flex align-items-start gap-3">
-            <i class="bi bi-star-fill text-warning fs-3"></i>
+            <i class="bi bi-star-fill text-warning fs-4 mt-1"></i>
             <div class="flex-grow-1">
-                <h6 class="alert-heading fw-bold mb-1">Penilaian Pelayanan Diperlukan!</h6>
+                <h6 class="fw-bold mb-1">Penilaian Pelayanan Diperlukan</h6>
                 <p class="mb-2 small">
-                    Anda memiliki <strong>{{ $unratedTickets->count() }} laporan</strong> yang telah diselesaikan oleh tim Padal/Teknisi namun belum Anda beri penilaian rating dan ulasan.
-                    Sesuai kebijakan sistem, Anda baru dapat mengajukan laporan permasalahan IT baru setelah memberikan rating pada laporan sebelumnya.
+                    Ada laporan selesai yang belum dinilai. Berikan penilaian sebelum membuat laporan baru.
                 </p>
                 <div class="d-flex flex-wrap gap-2">
                     @foreach($unratedTickets as $unrated)
-                        <a href="{{ route('user.tickets.show', $unrated->id) }}" class="btn btn-sm btn-dark">
-                            <i class="bi bi-star me-1"></i> Nilai Tiket #{{ $unrated->ticket_number }} ({{ Str::limit($unrated->title, 25) }})
+                        <a href="{{ route('user.tickets.show', $unrated->id) }}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-star me-1"></i> Beri Penilaian #{{ $unrated->ticket_number }}
                         </a>
                     @endforeach
                 </div>
@@ -29,134 +27,106 @@
     </div>
 @endif
 
-<!-- Action Header -->
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h5 class="fw-bold text-dark mb-0">Ringkasan Laporan Saya</h5>
-        <small class="text-muted">Pantau perkembangan status penanganan kendala IT Anda</small>
-    </div>
-    <div>
-        @if($unratedTickets->isNotEmpty())
-            <button class="btn btn-secondary disabled" title="Selesaikan rating laporan sebelumnya terlebih dahulu">
-                <i class="bi bi-lock-fill me-1"></i> Buat Laporan Baru
-            </button>
-        @else
-            <a href="{{ route('user.tickets.create') }}" class="btn btn-primary shadow-sm">
-                <i class="bi bi-plus-circle me-1"></i> Buat Laporan Baru
-            </a>
-        @endif
-    </div>
-</div>
-
-<!-- Statistik Cards -->
+<!-- 4 Statistik Utama -->
 <div class="row g-3 mb-4">
-    <div class="col-sm-6 col-xl-3">
-        <a href="{{ route('user.tickets.index') }}" class="stat-card d-flex align-items-center justify-content-between text-decoration-none text-reset" aria-label="Lihat seluruh {{ $stats['total'] }} laporan saya">
-            <div>
-                <span class="text-muted small fw-semibold">Total Laporan</span>
-                <h3 class="fw-bold mb-0 text-dark mt-1">{{ $stats['total'] }}</h3>
-            </div>
-            <div class="stat-icon bg-primary bg-opacity-10 text-primary">
-                <i class="bi bi-journal-text"></i>
-            </div>
+    <div class="col-6 col-xl-3">
+        <a href="{{ route('user.tickets.index') }}" class="stat-card">
+            <span class="stat-label">Total Laporan</span>
+            <div class="stat-value">{{ $stats['total'] }}</div>
         </a>
     </div>
-    <div class="col-sm-6 col-xl-3">
-        <a href="{{ route('user.tickets.index', ['status' => 'menunggu_verifikasi']) }}" class="stat-card d-flex align-items-center justify-content-between text-decoration-none text-reset" aria-label="Lihat {{ $stats['menunggu_verifikasi'] }} laporan menunggu verifikasi">
-            <div>
-                <span class="text-muted small fw-semibold">Menunggu Verifikasi</span>
-                <h3 class="fw-bold mb-0 text-warning mt-1">{{ $stats['menunggu_verifikasi'] }}</h3>
-            </div>
-            <div class="stat-icon bg-warning bg-opacity-10 text-warning">
-                <i class="bi bi-hourglass-split"></i>
-            </div>
+    <div class="col-6 col-xl-3">
+        <a href="{{ route('user.tickets.index', ['status' => 'menunggu_verifikasi']) }}" class="stat-card">
+            <span class="stat-label">Verifikasi</span>
+            <div class="stat-value">{{ $stats['menunggu_verifikasi'] }}</div>
         </a>
     </div>
-    <div class="col-sm-6 col-xl-3">
-        <a href="{{ route('user.tickets.index', ['status' => 'dalam_penanganan']) }}" class="stat-card d-flex align-items-center justify-content-between text-decoration-none text-reset" aria-label="Lihat {{ $stats['dalam_penanganan'] }} laporan dalam penanganan">
-            <div>
-                <span class="text-muted small fw-semibold">Dalam Penanganan</span>
-                <h3 class="fw-bold mb-0 text-info mt-1">{{ $stats['dalam_penanganan'] }}</h3>
-            </div>
-            <div class="stat-icon bg-info bg-opacity-10 text-info">
-                <i class="bi bi-gear-wide-connected"></i>
-            </div>
+    <div class="col-6 col-xl-3">
+        <a href="{{ route('user.tickets.index', ['status' => 'dalam_penanganan']) }}" class="stat-card">
+            <span class="stat-label">Penanganan</span>
+            <div class="stat-value">{{ $stats['dalam_penanganan'] }}</div>
         </a>
     </div>
-    <div class="col-sm-6 col-xl-3">
-        <a href="{{ route('user.tickets.index', ['status' => 'selesai_semua']) }}" class="stat-card d-flex align-items-center justify-content-between text-decoration-none text-reset" aria-label="Lihat {{ $stats['selesai'] }} laporan selesai">
-            <div>
-                <span class="text-muted small fw-semibold">Laporan Selesai</span>
-                <h3 class="fw-bold mb-0 text-success mt-1">{{ $stats['selesai'] }}</h3>
-            </div>
-            <div class="stat-icon bg-success bg-opacity-10 text-success">
-                <i class="bi bi-check-circle"></i>
-            </div>
+    <div class="col-6 col-xl-3">
+        <a href="{{ route('user.tickets.index', ['status' => 'selesai_semua']) }}" class="stat-card">
+            <span class="stat-label">Selesai</span>
+            <div class="stat-value">{{ $stats['selesai'] }}</div>
         </a>
     </div>
 </div>
 
-<!-- Tabel Laporan Terbaru -->
-<div class="card shadow-sm border-0">
-    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-        <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-clock-history me-2 text-primary"></i> Laporan Terakhir Anda</h6>
+<!-- Tombol Buat Laporan Baru -->
+<div class="mb-4">
+    @if($unratedTickets->isNotEmpty())
+        <button class="btn btn-disabled" disabled title="Selesaikan penilaian laporan sebelumnya terlebih dahulu">
+            <i class="bi bi-lock-fill me-1"></i> Buat Laporan Baru
+        </button>
+    @else
+        <a href="{{ route('user.tickets.create') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i> Buat Laporan Baru
+        </a>
+    @endif
+</div>
+
+<!-- Jadwal Kegiatan Terdekat -->
+<x-ticket-schedule-list :tickets="$scheduleTickets" show-route="user.tickets.show" />
+
+<!-- Tabel Laporan Terakhir Anda -->
+<div class="card mb-4">
+    <div class="card-header">
+        <span class="fw-bold">Laporan Terakhir Anda</span>
         <a href="{{ route('user.tickets.index') }}" class="small fw-semibold text-primary text-decoration-none">
             Lihat Semua <i class="bi bi-arrow-right"></i>
         </a>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light small text-secondary">
+            <table class="table table-hover align-middle">
+                <thead>
                     <tr>
-                        <th class="ps-3">Nomor Tiket</th>
-                        <th>Judul Permasalahan</th>
-                        <th>Kategori</th>
-                        <th>Lokasi Satker</th>
-                        <th>Status</th>
-                        <th>Tanggal Lapor</th>
-                        <th class="text-end pe-3">Aksi</th>
+                        <th class="ps-3">LAPORAN / JADWAL</th>
+                        <th>LOKASI</th>
+                        <th>STATUS</th>
+                        <th class="text-end pe-3">AKSI</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($recentTickets as $ticket)
                         <tr>
-                            <td class="ps-3 fw-bold text-primary font-monospace">{{ $ticket->ticket_number }}</td>
-                            <td>
-                                <div class="fw-semibold text-dark">{{ $ticket->title }}</div>
-                                <small class="text-muted text-truncate d-inline-block" style="max-width: 280px;">
-                                    {{ Str::limit($ticket->description, 60) }}
-                                </small>
+                            <td class="ps-3" data-label="Laporan / Jadwal">
+                                <span class="ticket-id d-block">{{ $ticket->ticket_number }}</span>
+                                <div class="fw-bold text-dark">{{ $ticket->title }}</div>
+                                <div class="small text-muted">
+                                    {{ $ticket->category?->name ?? 'Umum' }}
+                                    @if($ticket->event_date)
+                                        • {{ $ticket->event_date->format('d M Y') }}
+                                        @if($ticket->event_start_time && $ticket->event_end_time)
+                                            , {{ substr($ticket->event_start_time, 0, 5) }}-{{ substr($ticket->event_end_time, 0, 5) }}
+                                        @endif
+                                    @endif
+                                </div>
                             </td>
-                            <td>
-                                <span class="badge bg-light text-dark border">{{ $ticket->category?->name ?? '-' }}</span>
-                                <x-ticket-schedule :ticket="$ticket" />
+                            <td data-label="Lokasi">
+                                <span class="text-dark">{{ $ticket->location }}</span>
                             </td>
-                            <td><small class="text-secondary">{{ $ticket->location }}</small></td>
-                            <td>
+                            <td data-label="Status">
                                 <span class="{{ $ticket->status_badge_class }}">{{ $ticket->status_label }}</span>
                             </td>
-                            <td><small class="text-muted">{{ $ticket->created_at->format('d M Y, H:i') }}</small></td>
-                            <td class="text-end pe-3">
+                            <td class="text-end pe-3" data-label="Aksi">
                                 @if($ticket->status === \App\Models\Ticket::STATUS_SELESAI && !$ticket->rating)
-                                    <a href="{{ route('user.tickets.show', $ticket->id) }}" class="btn btn-sm btn-warning text-dark fw-bold">
-                                        <i class="bi bi-star me-1"></i> Beri Rating
-                                    </a>
-                                @elseif($ticket->rating)
-                                    <a href="{{ route('user.tickets.show', $ticket->id) }}" class="btn btn-sm btn-outline-success">
-                                        <i class="bi bi-check-circle me-1"></i> Rating Diberikan
+                                    <a href="{{ route('user.tickets.show', $ticket->id) }}" class="btn btn-sm btn-warning">
+                                        <i class="bi bi-star me-1"></i> Nilai
                                     </a>
                                 @else
-                                    <a href="{{ route('user.tickets.show', $ticket->id) }}" class="btn btn-sm btn-outline-primary">
-                                        <i class="bi bi-eye me-1"></i> Detail
+                                    <a href="{{ route('user.tickets.show', $ticket->id) }}" class="btn btn-sm btn-outline-secondary">
+                                        Detail
                                     </a>
                                 @endif
                             </td>
                         </tr>
                     @empty
-                        <tr>
-                            <td colspan="7" class="text-center py-5 text-muted">
-                                <i class="bi bi-inbox fs-2 d-block mb-2 text-secondary"></i>
+                        <tr class="table-empty-row">
+                            <td colspan="4" class="text-center py-5 text-muted">
                                 Belum ada laporan permasalahan IT yang diajukan.
                             </td>
                         </tr>

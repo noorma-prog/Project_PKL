@@ -1,31 +1,30 @@
 @props(['tickets', 'showRoute'])
 
-<section class="card border-0 shadow-sm mb-4">
-    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center gap-2">
-        <div>
-            <h2 class="h6 fw-bold mb-1">Jadwal Kegiatan Terdekat</h2>
-            <p class="small text-muted mb-0">Urutan berdasarkan tanggal dan jam kegiatan.</p>
+@if($tickets->isNotEmpty())
+    <div class="schedule-card">
+        <div class="schedule-card-header d-flex justify-content-between align-items-center">
+            <span class="fw-bold">Jadwal Kegiatan Terdekat</span>
+            <small class="text-muted">Urutan berdasarkan waktu kegiatan</small>
+        </div>
+        <div class="d-flex flex-column gap-2">
+            @foreach($tickets as $ticket)
+                <a href="{{ route($showRoute, $ticket) }}" class="schedule-item">
+                    <div class="schedule-date-badge">
+                        <span class="day">{{ $ticket->event_date ? $ticket->event_date->format('d') : '-' }}</span>
+                        <span class="month">{{ $ticket->event_date ? strtoupper($ticket->event_date->locale('id')->translatedFormat('M')) : 'TBA' }}</span>
+                    </div>
+                    <div class="schedule-info">
+                        <div class="schedule-title">{{ $ticket->title }}</div>
+                        <div class="schedule-meta">
+                            @if($ticket->event_start_time && $ticket->event_end_time)
+                                {{ substr($ticket->event_start_time, 0, 5) }}-{{ substr($ticket->event_end_time, 0, 5) }} • 
+                            @endif
+                            {{ $ticket->location ?? ($ticket->user?->satuan_kerja ?? 'POLDA') }}
+                        </div>
+                    </div>
+                    <span class="{{ $ticket->status_badge_class }} d-none d-sm-inline-flex">{{ $ticket->status_label }}</span>
+                </a>
+            @endforeach
         </div>
     </div>
-    <div class="list-group list-group-flush">
-        @forelse($tickets as $ticket)
-            <a href="{{ route($showRoute, $ticket) }}" class="list-group-item list-group-item-action py-3">
-                <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
-                    <div class="min-w-0">
-                        <div class="fw-semibold">{{ $ticket->title }}</div>
-                        <div class="small text-muted">
-                            {{ $ticket->ticket_number }} · {{ $ticket->category?->name ?? 'Kategori tidak tersedia' }}
-                        </div>
-                        @if($ticket->user)
-                            <div class="small text-muted">{{ $ticket->user->name }}</div>
-                        @endif
-                    </div>
-                    <span class="badge {{ $ticket->status_badge_class }}">{{ $ticket->status_label }}</span>
-                </div>
-                <x-ticket-schedule :ticket="$ticket" />
-            </a>
-        @empty
-            <div class="list-group-item text-muted py-4">Belum ada jadwal kegiatan mendatang.</div>
-        @endforelse
-    </div>
-</section>
+@endif
