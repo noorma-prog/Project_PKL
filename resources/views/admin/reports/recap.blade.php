@@ -1,13 +1,13 @@
 @extends('layouts.app')
 
-@section('title', 'Rekapitulasi Laporan IT')
-@section('page_title', 'Rekapitulasi Penanganan Laporan')
-@section('page_subtitle', 'Laporan periodik data penanganan gangguan dan permohonan layanan TIK')
+@section('title', 'Rekapitulasi Laporan')
+@section('page_title', 'Rekapitulasi Laporan')
+@section('page_subtitle', 'Kelola layanan IT dengan informasi yang jelas.')
 
 @section('styles')
 <style>
     @media print {
-        .sidebar, .topbar, .filter-card, .btn-print, .btn-back {
+        .sidebar, .topbar, .filter-card, .btn-print, .action-buttons-wrap, .btn-back {
             display: none !important;
         }
         .main-wrapper {
@@ -30,7 +30,7 @@
 @endsection
 
 @section('content')
-<!-- Header Khusus Cetak -->
+<!-- Header Khusus Cetak Browser (Tanpa Alamat) -->
 <div class="print-header mb-4 text-center border-bottom pb-3">
     <h4 class="fw-bold mb-0">KEPOLISIAN NEGARA REPUBLIK INDONESIA</h4>
     <h5 class="fw-bold mb-1">DAERAH KALIMANTAN SELATAN</h5>
@@ -40,174 +40,145 @@
 </div>
 
 <!-- Filter Card -->
-<div class="card shadow-sm border-0 rounded-3 mb-4 filter-card bg-white">
-    <div class="card-header bg-white py-3 border-bottom">
-        <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-funnel text-primary me-2"></i> Parameter Filter Rekapitulasi</h6>
-    </div>
-    <div class="card-body p-3">
-        <form method="GET" action="{{ route('admin.reports.recap') }}" class="row g-2 align-items-end">
-            @include('components.ticket-sort-filter')
-            <div class="col-lg-3 col-md-6">
-                <label class="form-label small fw-semibold text-secondary mb-1">Dari Tanggal:</label>
-                <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}">
+<div class="card bg-white border-0 shadow-sm mb-4 filter-card" style="border: 1px solid #E2E8F0 !important; border-radius: 8px;">
+    <div class="card-body p-3 p-md-4">
+        <form method="GET" action="{{ route('admin.reports.recap') }}">
+            <input type="hidden" name="sort" value="{{ request('sort', 'submission') }}">
+            @if(request('padal_id'))
+                <input type="hidden" name="padal_id" value="{{ request('padal_id') }}">
+            @endif
+
+            <div class="row g-3">
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <label class="form-label text-dark fw-semibold small mb-1">Tanggal Mulai</label>
+                    <input type="date" name="date_from" class="form-control" value="{{ request('date_from', $dateFrom->format('Y-m-d')) }}" style="border-radius: 6px; border-color: #D2D9E2; height: 38px; font-size: 13px;">
+                </div>
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <label class="form-label text-dark fw-semibold small mb-1">Tanggal Akhir</label>
+                    <input type="date" name="date_to" class="form-control" value="{{ request('date_to', $dateTo->format('Y-m-d')) }}" style="border-radius: 6px; border-color: #D2D9E2; height: 38px; font-size: 13px;">
+                </div>
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <label class="form-label text-dark fw-semibold small mb-1">Status</label>
+                    <select name="status" class="form-select" style="border-radius: 6px; border-color: #D2D9E2; height: 38px; font-size: 13px;">
+                        <option value="">Semua status</option>
+                        <option value="menunggu_verifikasi" {{ request('status') == 'menunggu_verifikasi' ? 'selected' : '' }}>Menunggu Verifikasi</option>
+                        <option value="dalam_penanganan" {{ request('status') == 'dalam_penanganan' ? 'selected' : '' }}>Dalam Penanganan</option>
+                        <option value="selesai" {{ request('status') == 'selesai' ? 'selected' : '' }}>Selesai</option>
+                        <option value="selesai_dinilai" {{ request('status') == 'selesai_dinilai' ? 'selected' : '' }}>Selesai & Dinilai</option>
+                        <option value="ditolak_admin" {{ request('status') == 'ditolak_admin' ? 'selected' : '' }}>Ditolak</option>
+                    </select>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <label class="form-label text-dark fw-semibold small mb-1">Kategori</label>
+                    <select name="category_id" class="form-select" style="border-radius: 6px; border-color: #D2D9E2; height: 38px; font-size: 13px;">
+                        <option value="">Semua kategori</option>
+                        @foreach($categories as $category)
+                            <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>
+                                {{ $category->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
-            <div class="col-lg-3 col-md-6">
-                <label class="form-label small fw-semibold text-secondary mb-1">Sampai Tanggal:</label>
-                <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}">
-            </div>
-            <div class="col-lg-2 col-md-4">
-                <label class="form-label small fw-semibold text-secondary mb-1">Status:</label>
-                <select name="status" class="form-select">
-                    <option value="">Semua Status</option>
-                    <option value="menunggu_verifikasi" {{ request('status') == 'menunggu_verifikasi' ? 'selected' : '' }}>Menunggu Verifikasi</option>
-                    <option value="dalam_penanganan" {{ request('status') == 'dalam_penanganan' ? 'selected' : '' }}>Dalam Penanganan</option>
-                    <option value="selesai" {{ request('status') == 'selesai' ? 'selected' : '' }}>Selesai</option>
-                    <option value="selesai_dinilai" {{ request('status') == 'selesai_dinilai' ? 'selected' : '' }}>Selesai & Dinilai</option>
-                    <option value="ditolak_admin" {{ request('status') == 'ditolak_admin' ? 'selected' : '' }}>Ditolak</option>
-                </select>
-            </div>
-            <div class="col-lg-2 col-md-4">
-                <label class="form-label small fw-semibold text-secondary mb-1">Kategori:</label>
-                <select name="category_id" class="form-select">
-                    <option value="">Semua Kategori</option>
-                    @foreach($categories as $category)
-                        <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>
-                            {{ $category->name }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-lg-2 col-md-4">
-                <button type="submit" class="btn btn-primary w-100">
-                    <i class="bi bi-filter me-1"></i> Terapkan
+
+            <div class="mt-3 d-flex align-items-center gap-2">
+                <button type="submit" class="btn btn-primary fw-medium px-4" style="background-color: #234ED8; border-color: #234ED8; height: 38px; border-radius: 6px; font-size: 13px;">
+                    Tampilkan Rekap
                 </button>
+                @if(request()->hasAny(['date_from', 'date_to', 'status', 'category_id']))
+                    <a href="{{ route('admin.reports.recap') }}" class="btn btn-link text-secondary text-decoration-none small px-2">
+                        Reset Filter
+                    </a>
+                @endif
             </div>
         </form>
     </div>
 </div>
 
-<!-- Ringkasan Rekap (Civic Blue Stat Cards) -->
-<div class="stat-grid mb-4">
-    <div class="stat-card">
-        <div class="stat-icon stat-icon--primary">
-            <i class="bi bi-journal-text"></i>
-        </div>
-        <div class="stat-body">
+<!-- Stat Cards (Ringkasan Total, Selesai, Penanganan, Verifikasi) -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="stat-card-compact">
+            <div class="stat-label">Total</div>
             <div class="stat-value">{{ $tickets->count() }}</div>
-            <div class="stat-label">Total Laporan Rekap</div>
         </div>
     </div>
-    <div class="stat-card">
-        <div class="stat-icon stat-icon--success">
-            <i class="bi bi-check2-circle"></i>
-        </div>
-        <div class="stat-body">
+    <div class="col-6 col-md-3">
+        <div class="stat-card-compact">
+            <div class="stat-label">Selesai</div>
             <div class="stat-value">{{ $tickets->whereIn('status', ['selesai', 'selesai_dinilai'])->count() }}</div>
-            <div class="stat-label">Selesai Ditangani</div>
         </div>
     </div>
-    <div class="stat-card">
-        <div class="stat-icon stat-icon--info">
-            <i class="bi bi-hourglass-split"></i>
-        </div>
-        <div class="stat-body">
+    <div class="col-6 col-md-3">
+        <div class="stat-card-compact">
+            <div class="stat-label">Penanganan</div>
             <div class="stat-value">{{ $tickets->where('status', 'dalam_penanganan')->count() }}</div>
-            <div class="stat-label">Sedang Ditangani</div>
         </div>
     </div>
-    <div class="stat-card">
-        <div class="stat-icon stat-icon--warning">
-            <i class="bi bi-clock-history"></i>
-        </div>
-        <div class="stat-body">
+    <div class="col-6 col-md-3">
+        <div class="stat-card-compact">
+            <div class="stat-label">Verifikasi</div>
             <div class="stat-value">{{ $tickets->where('status', 'menunggu_verifikasi')->count() }}</div>
-            <div class="stat-label">Menunggu Verifikasi</div>
         </div>
     </div>
 </div>
 
+<!-- Action Buttons (Preview PDF & Unduh PDF) -->
+<div class="d-flex flex-column flex-sm-row justify-content-sm-end align-items-stretch align-items-sm-center gap-2 mb-3 action-buttons-wrap">
+    <a href="{{ route('admin.reports.recap.preview', request()->query()) }}" class="btn btn-outline-secondary bg-white text-dark d-inline-flex align-items-center justify-content-center" style="border: 1px solid #D2D9E2; height: 38px; border-radius: 6px; font-weight: 500; font-size: 13px; padding: 0 16px;">
+        <i class="bi bi-file-earmark-pdf me-2 text-dark"></i> Preview PDF
+    </a>
+    <a href="{{ route('admin.reports.recap.export', request()->query()) }}" class="btn btn-primary d-inline-flex align-items-center justify-content-center" style="background-color: #234ED8; border-color: #234ED8; height: 38px; border-radius: 6px; font-weight: 500; font-size: 13px; padding: 0 18px;">
+        <i class="bi bi-download me-2"></i> Unduh PDF
+    </a>
+</div>
+
 <!-- Tabel Rekapitulasi -->
-<div class="card shadow-sm border-0 rounded-3">
-    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <div>
-            <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-table text-primary me-2"></i> Data Rekapitulasi ({{ $tickets->count() }} Laporan)</h6>
-            <small class="text-muted">Hasil filter data penanganan sesuai parameter yang dipilih</small>
-        </div>
-        <a href="{{ route('admin.reports.recap.preview', request()->query()) }}" class="btn btn-sm btn-dark btn-print">
-            <i class="bi bi-file-earmark-pdf-fill me-1 text-danger"></i> Pratinjau & Simpan PDF
-        </a>
-    </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light small text-secondary">
-                    <tr>
-                        <th style="width: 45px;" class="ps-3 text-center">No</th>
-                        <th style="width: 140px;">No. Tiket</th>
-                        <th>Pelapor & Satker</th>
-                        <th>Kategori & Judul</th>
-                        <th>Lokasi</th>
-                        <th>Padal</th>
-                        <th style="width: 150px;">Status</th>
-                        <th style="width: 100px;">Tgl Lapor</th>
-                        <th style="width: 100px;">Tgl Selesai</th>
-                        <th style="width: 80px;" class="text-end pe-3">Rating</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($tickets as $index => $ticket)
-                        <tr>
-                            <td class="ps-3 text-center" data-label="No">{{ $index + 1 }}</td>
-                            <td data-label="No. Tiket">
-                                <span class="font-monospace fw-bold text-primary">{{ $ticket->ticket_number }}</span>
-                            </td>
-                            <td data-label="Pelapor">
-                                <div class="fw-semibold text-dark">{{ $ticket->user->name }}</div>
-                                <small class="text-muted">{{ $ticket->user->satuan_kerja ?? '-' }}</small>
-                            </td>
-                            <td data-label="Permasalahan">
-                                <div class="small fw-semibold text-dark">{{ $ticket->title }}</div>
-                                <small class="text-muted">{{ $ticket->category?->name ?? 'Umum' }}</small>
-                                <x-ticket-event-time :ticket="$ticket" />
-                            </td>
-                            <td data-label="Lokasi">
-                                <span class="small text-secondary">{{ $ticket->location ?? '-' }}</span>
-                            </td>
-                            <td data-label="Padal">
-                                <span class="small fw-semibold text-dark">{{ $ticket->padal ? $ticket->padal->name : '-' }}</span>
-                            </td>
-                            <td data-label="Status">
-                                <span class="{{ $ticket->status_badge_class }}">{{ $ticket->status_label }}</span>
-                            </td>
-                            <td data-label="Tgl Lapor">
-                                <small class="text-muted">{{ $ticket->created_at->format('d/m/Y') }}</small>
-                            </td>
-                            <td data-label="Tgl Selesai">
-                                <small class="text-muted">{{ $ticket->completed_at ? $ticket->completed_at->format('d/m/Y') : '-' }}</small>
-                            </td>
-                            <td class="text-end pe-3" data-label="Rating">
-                                @if($ticket->rating)
-                                    <span class="badge bg-warning text-dark fw-bold">
-                                        <i class="bi bi-star-fill text-dark me-1"></i> {{ $ticket->rating->rating }}
-                                    </span>
-                                @else
-                                    <small class="text-muted">-</small>
+<div class="card bg-white border-0 shadow-sm" style="border: 1px solid #E2E8F0 !important; border-radius: 8px; overflow: hidden;">
+    <div class="table-responsive">
+        <table class="table align-middle mb-0" style="margin-bottom: 0;">
+            <thead style="background-color: #FAFAFB; border-bottom: 1px solid #EDF2F7;">
+                <tr>
+                    <th style="padding: 12px 16px; font-size: 11px; font-weight: 600; letter-spacing: 0.05em; color: #64748B; text-transform: uppercase;">LAPORAN / JADWAL</th>
+                    <th style="padding: 12px 16px; font-size: 11px; font-weight: 600; letter-spacing: 0.05em; color: #64748B; text-transform: uppercase;">LOKASI</th>
+                    <th style="padding: 12px 16px; font-size: 11px; font-weight: 600; letter-spacing: 0.05em; color: #64748B; text-transform: uppercase;">STATUS</th>
+                    <th style="padding: 12px 16px; font-size: 11px; font-weight: 600; letter-spacing: 0.05em; color: #64748B; text-transform: uppercase; text-align: right;">AKSI</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($tickets as $ticket)
+                    <tr style="border-bottom: 1px solid #F1F5F9;">
+                        <td style="padding: 14px 16px;">
+                            <div class="fw-semibold font-monospace" style="color: #234ED8; font-size: 12px; margin-bottom: 2px;">{{ $ticket->ticket_number }}</div>
+                            <div class="fw-bold text-dark" style="font-size: 13.5px; margin-bottom: 2px;">{{ $ticket->title }}</div>
+                            <div class="text-muted" style="font-size: 11.5px;">
+                                {{ $ticket->category?->name ?? 'Umum' }} &bull; {{ $ticket->created_at->translatedFormat('d M Y, H:i') }}
+                                @if($ticket->user)
+                                    &bull; Pelapor: {{ $ticket->user->name }}
                                 @endif
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="10" class="text-center py-5 text-muted">
-                                <div class="py-4">
-                                    <i class="bi bi-clipboard-x text-muted opacity-50 display-6 d-block mb-2"></i>
-                                    <p class="mb-0">Tidak ada data laporan pada periode dan kriteria filter yang dipilih.</p>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+                            </div>
+                            <x-ticket-event-time :ticket="$ticket" />
+                        </td>
+                        <td style="padding: 14px 16px; font-size: 13px; color: #334155;">
+                            {{ $ticket->location ?? '-' }}
+                        </td>
+                        <td style="padding: 14px 16px;">
+                            <span class="{{ $ticket->status_badge_class }}">{{ $ticket->status_label }}</span>
+                        </td>
+                        <td style="padding: 14px 16px; text-align: right;">
+                            <a href="{{ route('admin.tickets.show', $ticket->id) }}" class="btn btn-sm btn-outline-secondary bg-white text-dark px-3" style="border: 1px solid #CBD5E1; border-radius: 6px; font-weight: 500; font-size: 12px; height: 32px; display: inline-flex; align-items: center;">Detail</a>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="4" class="text-center py-5 text-muted">
+                            <i class="bi bi-clipboard-x display-6 text-muted opacity-50 d-block mb-2"></i>
+                            <span>Tidak ada data laporan pada periode dan kriteria filter yang dipilih.</span>
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
     </div>
 </div>
 @endsection

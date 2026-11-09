@@ -23,8 +23,8 @@
 
         .header {
             text-align: center;
-            margin-bottom: 10px;
-            border-bottom: 1px solid #d1d5db;
+            margin-bottom: 12px;
+            border-bottom: 2px solid #111827;
             padding-bottom: 8px;
         }
 
