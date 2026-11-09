@@ -386,8 +386,7 @@ body[data-design="A"] .card-footer {
    Stat Cards (Tinggi 82px, 1px line, bold 26px / 11.5px)
    ========================================================================== */
 
-body[data-design="A"] .stat-card,
-body[data-design="A"] .stat-card-compact {
+body[data-design="A"] .stat-card {
     height: 82px;
     min-height: 82px;
     background: var(--civic-surface);
@@ -403,16 +402,13 @@ body[data-design="A"] .stat-card-compact {
     margin-bottom: 0;
 }
 
-body[data-design="A"] .stat-card:hover,
-body[data-design="A"] .stat-card-compact:hover {
+body[data-design="A"] .stat-card:hover {
     border-color: var(--civic-primary);
     box-shadow: 0 2px 6px rgba(35, 78, 216, 0.08) !important;
 }
 
 body[data-design="A"] .stat-card .stat-label,
-body[data-design="A"] .stat-card-compact .stat-label,
-body[data-design="A"] .stat-card span.small,
-body[data-design="A"] .stat-card-compact span.small {
+body[data-design="A"] .stat-card span.small {
     font-size: 11.5px;
     font-weight: 500;
     color: var(--civic-muted) !important;
@@ -422,9 +418,7 @@ body[data-design="A"] .stat-card-compact span.small {
 }
 
 body[data-design="A"] .stat-card .stat-value,
-body[data-design="A"] .stat-card-compact .stat-value,
-body[data-design="A"] .stat-card h3,
-body[data-design="A"] .stat-card-compact h3 {
+body[data-design="A"] .stat-card h3 {
     font-size: 26px;
     font-weight: 700;
     line-height: 1;
@@ -433,8 +427,7 @@ body[data-design="A"] .stat-card-compact h3 {
     letter-spacing: -0.01em;
 }
 
-body[data-design="A"] .stat-card .stat-icon,
-body[data-design="A"] .stat-card-compact .stat-icon {
+body[data-design="A"] .stat-card .stat-icon {
     display: none; /* Bersih sesuai desain Civic Blue flat */
 }
 

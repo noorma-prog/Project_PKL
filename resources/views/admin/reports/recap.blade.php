@@ -6,34 +6,6 @@
 
 @section('styles')
 <style>
-    .stat-card {
-        height: 82px;
-        min-height: 82px;
-        background: #FFFFFF !important;
-        border: 1px solid #DCE3ED !important;
-        border-radius: 10px !important;
-        padding: 12px 16px !important;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02) !important;
-        margin-bottom: 0;
-    }
-    .stat-card .stat-label {
-        font-size: 11.5px;
-        font-weight: 500;
-        color: #55647A !important;
-        line-height: 1.2;
-        margin-bottom: 4px;
-        display: block;
-    }
-    .stat-card .stat-value {
-        font-size: 26px;
-        font-weight: 700;
-        line-height: 1;
-        color: #234ED8 !important;
-        margin: 0;
-    }
     @media print {
         .sidebar, .topbar, .filter-card, .btn-print, .action-buttons-wrap, .btn-back {
             display: none !important;
@@ -127,25 +99,25 @@
 <div class="row g-3 mb-4">
     <div class="col-6 col-md-3">
         <div class="stat-card">
-            <span class="stat-label">Total</span>
+            <div class="stat-label">Total</div>
             <div class="stat-value">{{ $tickets->count() }}</div>
         </div>
     </div>
     <div class="col-6 col-md-3">
         <div class="stat-card">
-            <span class="stat-label">Selesai</span>
+            <div class="stat-label">Selesai</div>
             <div class="stat-value">{{ $tickets->whereIn('status', ['selesai', 'selesai_dinilai'])->count() }}</div>
         </div>
     </div>
     <div class="col-6 col-md-3">
         <div class="stat-card">
-            <span class="stat-label">Penanganan</span>
+            <div class="stat-label">Penanganan</div>
             <div class="stat-value">{{ $tickets->where('status', 'dalam_penanganan')->count() }}</div>
         </div>
     </div>
     <div class="col-6 col-md-3">
         <div class="stat-card">
-            <span class="stat-label">Verifikasi</span>
+            <div class="stat-label">Verifikasi</div>
             <div class="stat-value">{{ $tickets->where('status', 'menunggu_verifikasi')->count() }}</div>
         </div>
     </div>
