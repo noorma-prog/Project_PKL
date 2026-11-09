@@ -26,8 +26,8 @@
             --police-accent: #2563eb;
             --police-gold: #d97706;
             --police-gold-hover: #b45309;
-            --sidebar-width: 260px;
-            --topbar-height: 70px;
+            --sidebar-width: 198px;
+            --topbar-height: 60px;
             --bg-page: #f1f5f9;
         }
 
@@ -54,18 +54,19 @@
         }
 
         .sidebar-brand {
-            padding: 1.25rem 1.5rem;
+            padding: 0 0.85rem;
+            height: var(--topbar-height);
             display: flex;
             align-items: center;
-            gap: 0.85rem;
+            gap: 0.65rem;
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             background: rgba(0, 0, 0, 0.15);
         }
 
         .sidebar-brand .logo-icon {
-            width: 46px;
-            height: 46px;
-            min-width: 46px;
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -87,54 +88,56 @@
         }
 
         .sidebar-brand .brand-text {
-            line-height: 1.2;
+            line-height: 1.15;
+            min-width: 0;
         }
 
         .sidebar-brand .brand-title {
             color: #ffffff;
             font-weight: 700;
-            font-size: 1.15rem;
-            letter-spacing: -0.5px;
+            font-size: 0.95rem;
+            letter-spacing: -0.3px;
             margin: 0;
         }
 
         .sidebar-brand .brand-sub {
             color: #94a3b8;
-            font-size: 0.75rem;
+            font-size: 0.65rem;
             margin: 0;
         }
 
         .sidebar-nav {
-            padding: 1.25rem 0.85rem;
+            padding: 0.75rem 0.45rem;
             flex-grow: 1;
             overflow-y: auto;
         }
 
         .nav-section-title {
-            font-size: 0.7rem;
+            font-size: 0.62rem;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.06em;
             font-weight: 700;
             color: #64748b;
-            padding: 0.5rem 0.85rem;
-            margin-top: 0.75rem;
+            padding: 0.4rem 0.5rem 0.2rem;
+            margin-top: 0.6rem;
         }
 
         .sidebar .nav-link {
             color: #cbd5e1;
-            padding: 0.7rem 1rem;
-            border-radius: 0.5rem;
+            padding: 0.45rem 0.6rem;
+            border-radius: 0.4rem;
             display: flex;
             align-items: center;
-            gap: 0.85rem;
+            gap: 0.6rem;
             font-weight: 500;
-            font-size: 0.9rem;
-            margin-bottom: 0.25rem;
+            font-size: 0.8125rem;
+            margin-bottom: 0.2rem;
+            min-height: 36px;
             transition: all 0.2s ease;
         }
 
         .sidebar .nav-link i {
-            font-size: 1.15rem;
+            font-size: 0.95rem;
             color: #94a3b8;
             transition: all 0.2s ease;
         }
@@ -160,14 +163,14 @@
         }
 
         .sidebar-footer {
-            padding: 1rem 1.25rem;
+            padding: 0.65rem 0.75rem;
             border-top: 1px solid rgba(255, 255, 255, 0.08);
             background: rgba(0, 0, 0, 0.2);
         }
 
         .sidebar-footer .btn {
-            min-width: 44px;
-            min-height: 44px;
+            min-width: 32px;
+            min-height: 32px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -187,7 +190,7 @@
             height: var(--topbar-height);
             background: #ffffff;
             border-bottom: 1px solid #e2e8f0;
-            padding: 0 2rem;
+            padding: 0 1.5rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -198,8 +201,10 @@
         }
 
         .content-area {
-            padding: 2rem;
+            padding: 1.25rem 1.5rem 2.25rem;
             flex-grow: 1;
+            width: 100%;
+            max-width: 100%;
         }
 
         /* Role Badges */
@@ -223,40 +228,56 @@
         /* Card Custom */
         .card {
             border: 1px solid #e2e8f0;
-            border-radius: 0.85rem;
+            border-radius: 10px;
             box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+            margin-bottom: 1.25rem;
         }
 
         .card-header {
             background-color: #ffffff;
             border-bottom: 1px solid #f1f5f9;
             font-weight: 600;
-            padding: 1rem 1.25rem;
+            padding: 0.75rem 1.15rem;
+            font-size: 0.88rem;
         }
 
         /* Stat Card */
         .stat-card {
-            border-radius: 0.85rem;
+            border-radius: 10px;
             background: #ffffff;
-            padding: 1.35rem;
+            padding: 0.75rem 1rem;
             border: 1px solid #e2e8f0;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            height: 82px;
+            min-height: 82px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-decoration: none;
             transition: transform 0.2s, box-shadow 0.2s;
         }
 
         .stat-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 6px 12px -2px rgba(0, 0, 0, 0.08);
+        }
+
+        .stat-card .stat-label {
+            font-size: 0.72rem;
+            font-weight: 500;
+            color: #64748b;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-card .stat-value {
+            font-size: 1.55rem;
+            font-weight: 700;
+            color: #1d4ed8;
+            line-height: 1;
         }
 
         .stat-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
+            display: none;
         }
 
         /* Responsive Mobile */
@@ -640,9 +661,9 @@
                 </div>
 
                 <div class="dropdown">
-                    <button class="btn btn-light rounded-circle p-2 d-flex align-items-center justify-content-center" 
-                            style="width: 40px; height: 40px; border: 1px solid var(--civic-line);" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Menu profil pengguna">
-                        <i class="bi bi-person-fill fs-5 text-secondary"></i>
+                    <button class="btn btn-light rounded-circle p-1 d-flex align-items-center justify-content-center" 
+                            style="width: 34px; height: 34px; border: 1px solid var(--civic-line);" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Menu profil pengguna">
+                        <i class="bi bi-person-fill text-secondary" style="font-size: 0.95rem;"></i>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end shadow-sm border mt-2" style="border-radius: 10px;">
                         <li class="px-3 py-2 border-bottom">
