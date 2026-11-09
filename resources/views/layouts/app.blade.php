@@ -16,7 +16,7 @@
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <!-- LayanIT Civic Blue Theme -->
-    <link rel="stylesheet" href="{{ asset('css/redesign.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/redesign.css') }}?v={{ file_exists(public_path('css/redesign.css')) ? filemtime(public_path('css/redesign.css')) : time() }}">
 
     <style>
         :root {
