@@ -624,7 +624,7 @@ class LayanItWorkflowTest extends TestCase
             ->put(route('profile.update'), [
                 'name' => $this->admin->name,
                 'email' => $originalEmail,
-            ])->assertRedirect(route('profile.show'))
+            ])->assertRedirect(route('admin.dashboard'))
             ->assertSessionHas('success');
 
         $this->from(route('profile.show'))

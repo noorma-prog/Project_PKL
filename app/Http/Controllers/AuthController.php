@@ -300,7 +300,7 @@ class AuthController extends Controller
             return back()->with('success', 'Profil berhasil diperbarui. Tautan verifikasi telah dikirim ke alamat email baru; verifikasi sebelum menggunakan dashboard kembali.');
         }
 
-        return back()->with('success', 'Profil Anda berhasil diperbarui.');
+        return $this->redirectBasedOnRole($user)->with('success', 'Profil Anda berhasil diperbarui.');
     }
 
     /**
