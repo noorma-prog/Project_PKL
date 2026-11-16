@@ -22,6 +22,7 @@ class UserTicketController extends Controller
 
         // Cek apakah ada laporan selesai yang belum dinilai
         $unratedTickets = $user->getUnratedCompletedTickets();
+        $canCreateTicket = $user->canCreateNewTicket();
 
         // Statistik laporan milik pelapor
         $stats = [
@@ -47,7 +48,7 @@ class UserTicketController extends Controller
             ->take(5)
             ->get();
 
-        return view('user.dashboard', compact('stats', 'recentTickets', 'scheduleTickets', 'unratedTickets'));
+        return view('user.dashboard', compact('stats', 'recentTickets', 'scheduleTickets', 'unratedTickets', 'canCreateTicket'));
     }
 
     /**
@@ -99,11 +100,11 @@ class UserTicketController extends Controller
     {
         $user = Auth::user();
 
-        // ATURAN PENTING: Periksa apakah user masih punya laporan selesai yang belum dinilai
-        if ($user->hasUnratedCompletedTickets()) {
+        // ATURAN UTAMA: Pengguna hanya boleh membuat laporan baru apabila SELURUH tiket miliknya sebelumnya sudah selesai ditangani dan sudah diberikan rating.
+        if (!$user->canCreateNewTicket()) {
             return redirect()->route('user.tickets.index')->with(
                 'error',
-                'Anda memiliki laporan yang telah selesai namun belum diberi rating. Harap berikan penilaian pelayanan terlebih dahulu sebelum membuat laporan baru.'
+                'Anda masih memiliki laporan yang belum selesai ditangani atau belum diberikan penilaian. Silakan selesaikan proses laporan sebelumnya terlebih dahulu sebelum membuat laporan baru.'
             );
         }
 
@@ -117,11 +118,11 @@ class UserTicketController extends Controller
     {
         $user = Auth::user();
 
-        // Validasi aturan: Tolak pembuatan laporan baru jika masih ada yang belum dinilai
-        if ($user->hasUnratedCompletedTickets()) {
+        // Validasi aturan: Tolak pembuatan laporan baru jika masih ada tiket belum selesai atau belum dinilai
+        if (!$user->canCreateNewTicket()) {
             return redirect()->route('user.tickets.index')->with(
                 'error',
-                'Pembuatan laporan ditolak. Anda masih mempunyai laporan selesai yang belum diberi rating dan ulasan.'
+                'Anda masih memiliki laporan yang belum selesai ditangani atau belum diberikan penilaian. Silakan selesaikan proses laporan sebelumnya terlebih dahulu sebelum membuat laporan baru.'
             );
         }
 
@@ -149,10 +150,10 @@ class UserTicketController extends Controller
 
         return DB::transaction(function () use ($request, $validated, $user) {
             $user = $user->newQuery()->whereKey($user->id)->lockForUpdate()->firstOrFail();
-            if ($user->hasUnratedCompletedTickets()) {
+            if (!$user->canCreateNewTicket()) {
                 return redirect()->route('user.tickets.index')->with(
                     'error',
-                    'Pembuatan laporan ditolak. Anda masih mempunyai laporan selesai yang belum diberi rating dan ulasan.'
+                    'Anda masih memiliki laporan yang belum selesai ditangani atau belum diberikan penilaian. Silakan selesaikan proses laporan sebelumnya terlebih dahulu sebelum membuat laporan baru.'
                 );
             }
 

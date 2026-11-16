@@ -118,13 +118,42 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Daftar status tiket yang masih dalam proses penanganan (belum selesai).
+     */
+    public const UNFINISHED_TICKET_STATUSES = [
+        Ticket::STATUS_MENUNGGU_VERIFIKASI,
+        Ticket::STATUS_MENUNGGU_KONFIRMASI_PADAL,
+        Ticket::STATUS_DALAM_PENANGANAN,
+        Ticket::STATUS_DITOLAK_PADAL,
+    ];
+
+    /**
+     * Memeriksa apakah User memiliki tiket yang masih belum selesai ditangani.
+     */
+    public function hasUnfinishedTickets(): bool
+    {
+        return $this->tickets()
+            ->whereIn('status', self::UNFINISHED_TICKET_STATUSES)
+            ->exists();
+    }
+
+    /**
+     * Mengambil tiket milik user yang belum selesai ditangani.
+     */
+    public function getUnfinishedTickets()
+    {
+        return $this->tickets()
+            ->whereIn('status', self::UNFINISHED_TICKET_STATUSES)
+            ->get();
+    }
+
+    /**
      * Memeriksa apakah User memiliki laporan selesai yang belum diberi rating (Use Case: Cek Rating Tertunda).
      */
     public function hasUnratedCompletedTickets(): bool
     {
         return $this->tickets()
-            ->where('status', Ticket::STATUS_SELESAI)
-            ->whereDoesntHave('rating')
+            ->whereIn('status', [Ticket::STATUS_SELESAI, Ticket::STATUS_SELESAI_DINILAI])
             ->whereDoesntHave('rating')
             ->exists();
     }
@@ -135,10 +164,26 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getUnratedCompletedTickets()
     {
         return $this->tickets()
-            ->where('status', Ticket::STATUS_SELESAI)
-            ->whereDoesntHave('rating')
+            ->whereIn('status', [Ticket::STATUS_SELESAI, Ticket::STATUS_SELESAI_DINILAI])
             ->whereDoesntHave('rating')
             ->get();
+    }
+
+    /**
+     * Memeriksa apakah User memiliki tiket yang belum selesai ditangani ATAU tiket selesai yang belum dinilai.
+     */
+    public function hasPendingOrUnratedTickets(): bool
+    {
+        return $this->hasUnfinishedTickets() || $this->hasUnratedCompletedTickets();
+    }
+
+    /**
+     * Memeriksa apakah User boleh membuat laporan baru.
+     * Pengguna hanya boleh membuat laporan baru apabila SELURUH tiket miliknya sebelumnya sudah selesai ditangani dan sudah diberikan rating.
+     */
+    public function canCreateNewTicket(): bool
+    {
+        return !$this->hasPendingOrUnratedTickets();
     }
 
     // -------------------------------------------------------------

@@ -5,17 +5,20 @@
 @section('page_subtitle', 'Kelola layanan IT dengan informasi yang jelas.')
 
 @section('content')
-<!-- Peringatan jika ada laporan yang selesai dan belum dinilai -->
-@if($unratedTickets->isNotEmpty())
+<!-- Peringatan jika ada laporan yang belum selesai ditangani atau belum dinilai -->
+@if(!($canCreateTicket ?? Auth::user()->canCreateNewTicket()))
     <div class="alert alert-warning mb-4" role="alert">
         <div class="d-flex align-items-start gap-3">
-            <i class="bi bi-star-fill text-warning fs-4 mt-1"></i>
+            <i class="bi bi-exclamation-triangle-fill text-warning fs-4 mt-1"></i>
             <div class="flex-grow-1">
-                <h6 class="fw-bold mb-1">Penilaian Pelayanan Diperlukan</h6>
+                <h6 class="fw-bold mb-1">Perhatian</h6>
                 <p class="mb-2 small">
-                    Ada laporan selesai yang belum dinilai. Berikan penilaian sebelum membuat laporan baru.
+                    Anda masih memiliki laporan yang belum selesai ditangani atau belum diberikan penilaian. Silakan selesaikan proses laporan sebelumnya terlebih dahulu sebelum membuat laporan baru.
                 </p>
                 <div class="d-flex flex-wrap gap-2">
+                    <a href="{{ route('user.tickets.index') }}" class="btn btn-sm btn-outline-dark">
+                        <i class="bi bi-journal-text me-1"></i> Lihat Laporan Saya
+                    </a>
                     @foreach($unratedTickets as $unrated)
                         <a href="{{ route('user.tickets.show', $unrated->id) }}" class="btn btn-sm btn-primary">
                             <i class="bi bi-star me-1"></i> Beri Penilaian #{{ $unrated->ticket_number }}
@@ -57,8 +60,8 @@
 
 <!-- Tombol Buat Laporan Baru -->
 <div class="mb-4">
-    @if($unratedTickets->isNotEmpty())
-        <button class="btn btn-disabled" disabled title="Selesaikan penilaian laporan sebelumnya terlebih dahulu">
+    @if(!($canCreateTicket ?? Auth::user()->canCreateNewTicket()))
+        <button type="button" class="btn btn-disabled" disabled title="Anda masih memiliki laporan yang belum selesai ditangani atau belum diberikan penilaian. Silakan selesaikan proses laporan sebelumnya terlebih dahulu sebelum membuat laporan baru.">
             <i class="bi bi-lock-fill me-1"></i> Buat Laporan Baru
         </button>
     @else

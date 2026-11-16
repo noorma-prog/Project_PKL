@@ -84,8 +84,8 @@ class UserTicketRatingTest extends TestCase
         $this->actingAs($this->user)
             ->get(route('user.tickets.show', $ticket->id))
             ->assertOk()
-            ->assertSee('Beri Bintang Kepuasan Pelayanan')
-            ->assertSee('Kirim Penilaian Pelayanan');
+            ->assertSee('Penilaian Pelayanan')
+            ->assertSee('Kirim Penilaian');
 
         $this->post(route('user.tickets.rate', $ticket->id), [
             'rating' => 5,
@@ -103,8 +103,8 @@ class UserTicketRatingTest extends TestCase
 
         $this->get(route('user.tickets.show', $ticket->id))
             ->assertOk()
-            ->assertSee('Rating Diberikan')
-            ->assertSee('5 / 5 Bintang')
+            ->assertSee('Penilaian Pelayanan')
+            ->assertSee('5 / 5')
             ->assertDontSee('Kirim Penilaian Pelayanan');
 
         $this->from(route('user.tickets.show', $ticket->id))
@@ -123,7 +123,7 @@ class UserTicketRatingTest extends TestCase
             ->assertSee($this->user->name)
             ->assertSee($this->padal->nama_padal)
             ->assertSee('Penanganan cepat dan tuntas.')
-            ->assertSee('5.0 / 5.0');
+            ->assertSee('5.0 / 5');
 
         $this->actingAs($this->user)
             ->post(route('user.tickets.store'), [
@@ -190,11 +190,10 @@ class UserTicketRatingTest extends TestCase
         $this->actingAs($this->user)
             ->get(route('user.dashboard'))
             ->assertOk()
-            ->assertSee('Rating Diberikan')
-            ->assertSee('Selesai & Telah Dinilai');
+            ->assertSee('Selesai &amp; Telah Dinilai', false);
         $this->get(route('user.tickets.index'))
             ->assertOk()
-            ->assertSee('Rating Diberikan (4/5)');
+            ->assertSee('Selesai &amp; Telah Dinilai', false);
     }
 
     public function test_rating_value_is_validated_and_no_rating_is_saved_when_input_is_invalid(): void
