@@ -256,3 +256,4 @@ class ProfileUpdateRedirectTest extends TestCase
         ]);
     }
 }
+
