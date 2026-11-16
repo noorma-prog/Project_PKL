@@ -810,19 +810,32 @@ class AdminController extends Controller
 
         Carbon::setLocale('id');
 
-        $query = Ticket::with(['user', 'category', 'padal.leader', 'rating'])
+        $baseQuery = Ticket::with(['user', 'category', 'padal.leader', 'rating'])
             ->whereBetween('created_at', [$dateFrom, $dateTo]);
 
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
         if ($request->filled('category_id')) {
-            $query->where('category_id', $request->category_id);
+            $baseQuery->where('category_id', $request->category_id);
         }
 
         if ($request->filled('padal_id')) {
-            $query->where('padal_id', $request->padal_id);
+            $baseQuery->where('padal_id', $request->padal_id);
+        }
+
+        // Statistik 4 kartu berdasarkan periode tanggal dan kategori yang dipilih
+        $stats = [
+            'total' => (clone $baseQuery)->count(),
+            'selesai' => (clone $baseQuery)->whereIn('status', [Ticket::STATUS_SELESAI, Ticket::STATUS_SELESAI_DINILAI])->count(),
+            'dalam_penanganan' => (clone $baseQuery)->where('status', Ticket::STATUS_DALAM_PENANGANAN)->count(),
+            'menunggu_verifikasi' => (clone $baseQuery)->where('status', Ticket::STATUS_MENUNGGU_VERIFIKASI)->count(),
+        ];
+
+        // Terapkan filter status pada query laporan tabel
+        $query = clone $baseQuery;
+
+        if (in_array($request->input('status'), ['selesai', 'selesai_semua'], true)) {
+            $query->whereIn('status', [Ticket::STATUS_SELESAI, Ticket::STATUS_SELESAI_DINILAI]);
+        } elseif ($request->filled('status')) {
+            $query->where('status', $request->status);
         }
 
         $tickets = $request->query('sort') === 'schedule'
@@ -831,6 +844,7 @@ class AdminController extends Controller
 
         return [
             'tickets' => $tickets,
+            'stats' => $stats,
             'categories' => Category::all(),
             'padals' => Padal::all(),
             'dateFrom' => $dateFrom,

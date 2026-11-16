@@ -6,6 +6,15 @@
 
 @section('styles')
 <style>
+    .stat-card {
+        cursor: pointer;
+        text-decoration: none;
+    }
+    .stat-card.active {
+        border-color: #234ED8 !important;
+        border-width: 1.5px !important;
+        box-shadow: 0 0 0 1px #234ED8, 0 2px 6px rgba(35, 78, 216, 0.12) !important;
+    }
     @media print {
         .sidebar, .topbar, .filter-card, .btn-print, .action-buttons-wrap, .btn-back {
             display: none !important;
@@ -95,31 +104,45 @@
     </div>
 </div>
 
+@php
+    $currentStatus = request('status');
+    $isTotalActive = empty($currentStatus);
+    $isSelesaiActive = in_array($currentStatus, ['selesai', 'selesai_semua', 'selesai_dinilai'], true);
+    $isPenangananActive = $currentStatus === 'dalam_penanganan';
+    $isVerifikasiActive = $currentStatus === 'menunggu_verifikasi';
+
+    $baseParams = request()->except(['page', 'status']);
+    $urlTotal = route('admin.reports.recap', $baseParams);
+    $urlSelesai = route('admin.reports.recap', array_merge($baseParams, ['status' => 'selesai']));
+    $urlPenanganan = route('admin.reports.recap', array_merge($baseParams, ['status' => 'dalam_penanganan']));
+    $urlVerifikasi = route('admin.reports.recap', array_merge($baseParams, ['status' => 'menunggu_verifikasi']));
+@endphp
+
 <!-- Stat Cards (Ringkasan Total, Selesai, Penanganan, Verifikasi) -->
 <div class="row g-3 mb-4">
     <div class="col-6 col-md-3">
-        <div class="stat-card">
+        <a href="{{ $urlTotal }}" class="stat-card {{ $isTotalActive ? 'active' : '' }}" data-status="" title="Tampilkan seluruh laporan">
             <div class="stat-label">Total</div>
-            <div class="stat-value">{{ $tickets->count() }}</div>
-        </div>
+            <div class="stat-value">{{ $stats['total'] ?? $tickets->count() }}</div>
+        </a>
     </div>
     <div class="col-6 col-md-3">
-        <div class="stat-card">
+        <a href="{{ $urlSelesai }}" class="stat-card {{ $isSelesaiActive ? 'active' : '' }}" data-status="selesai" title="Filter laporan selesai">
             <div class="stat-label">Selesai</div>
-            <div class="stat-value">{{ $tickets->whereIn('status', ['selesai', 'selesai_dinilai'])->count() }}</div>
-        </div>
+            <div class="stat-value">{{ $stats['selesai'] ?? $tickets->whereIn('status', ['selesai', 'selesai_dinilai'])->count() }}</div>
+        </a>
     </div>
     <div class="col-6 col-md-3">
-        <div class="stat-card">
+        <a href="{{ $urlPenanganan }}" class="stat-card {{ $isPenangananActive ? 'active' : '' }}" data-status="dalam_penanganan" title="Filter laporan dalam penanganan">
             <div class="stat-label">Penanganan</div>
-            <div class="stat-value">{{ $tickets->where('status', 'dalam_penanganan')->count() }}</div>
-        </div>
+            <div class="stat-value">{{ $stats['dalam_penanganan'] ?? $tickets->where('status', 'dalam_penanganan')->count() }}</div>
+        </a>
     </div>
     <div class="col-6 col-md-3">
-        <div class="stat-card">
+        <a href="{{ $urlVerifikasi }}" class="stat-card {{ $isVerifikasiActive ? 'active' : '' }}" data-status="menunggu_verifikasi" title="Filter laporan menunggu verifikasi">
             <div class="stat-label">Verifikasi</div>
-            <div class="stat-value">{{ $tickets->where('status', 'menunggu_verifikasi')->count() }}</div>
-        </div>
+            <div class="stat-value">{{ $stats['menunggu_verifikasi'] ?? $tickets->where('status', 'menunggu_verifikasi')->count() }}</div>
+        </a>
     </div>
 </div>
 
@@ -173,7 +196,15 @@
                     <tr>
                         <td colspan="4" class="text-center py-5 text-muted">
                             <i class="bi bi-clipboard-x display-6 text-muted opacity-50 d-block mb-2"></i>
-                            <span>Tidak ada data laporan pada periode dan kriteria filter yang dipilih.</span>
+                            @if(request('status') === 'menunggu_verifikasi')
+                                <span>Tidak ada laporan yang menunggu verifikasi pada periode dan kriteria filter yang dipilih.</span>
+                            @elseif(request('status') === 'dalam_penanganan')
+                                <span>Tidak ada laporan yang sedang dalam penanganan pada periode dan kriteria filter yang dipilih.</span>
+                            @elseif(in_array(request('status'), ['selesai', 'selesai_semua', 'selesai_dinilai'], true))
+                                <span>Tidak ada laporan yang telah selesai pada periode dan kriteria filter yang dipilih.</span>
+                            @else
+                                <span>Tidak ada data laporan pada periode dan kriteria filter yang dipilih.</span>
+                            @endif
                         </td>
                     </tr>
                 @endforelse
@@ -181,4 +212,24 @@
         </table>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.stat-card[data-status]').forEach(function(card) {
+            card.addEventListener('click', function(e) {
+                var form = document.querySelector('.filter-card form');
+                if (form) {
+                    e.preventDefault();
+                    var statusSelect = form.querySelector('select[name="status"]');
+                    if (statusSelect) {
+                        statusSelect.value = this.getAttribute('data-status') || '';
+                    }
+                    form.submit();
+                }
+            });
+        });
+    });
+</script>
 @endsection
