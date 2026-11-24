@@ -113,3 +113,4 @@ class TicketAttachmentController extends Controller
         ]);
     }
 }
+

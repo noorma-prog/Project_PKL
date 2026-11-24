@@ -152,3 +152,4 @@ class MigrateTicketAttachmentsToPrivate extends Command
         };
     }
 }
+
