@@ -34,9 +34,13 @@ class PasswordSetupController extends Controller
         $validated = $request->validate([
             'token' => ['required', 'string'],
             'email' => ['required', 'string', 'email'],
-            'password' => ['required', 'confirmed', PasswordRule::min(8)],
+            'password' => ['required', 'confirmed', PasswordRule::min(10)->letters()->mixedCase()->numbers()],
         ], [
-            'password.min' => 'Kata sandi minimal 8 karakter.',
+            'password.required' => 'Kata sandi wajib diisi.',
+            'password.min' => 'Kata sandi minimal 10 karakter dan harus memuat huruf besar, huruf kecil, serta angka.',
+            'password.letters' => 'Kata sandi minimal 10 karakter dan harus memuat huruf besar, huruf kecil, serta angka.',
+            'password.mixed' => 'Kata sandi minimal 10 karakter dan harus memuat huruf besar, huruf kecil, serta angka.',
+            'password.numbers' => 'Kata sandi minimal 10 karakter dan harus memuat huruf besar, huruf kecil, serta angka.',
             'password.confirmed' => 'Konfirmasi kata sandi tidak cocok.',
         ]);
 

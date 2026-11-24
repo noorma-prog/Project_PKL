@@ -165,7 +165,7 @@ class UserTicketController extends Controller
 
             $attachmentPath = null;
             if ($request->hasFile('attachment')) {
-                $attachmentPath = $request->file('attachment')->store('attachments/tickets', 'public');
+                $attachmentPath = $request->file('attachment')->store('attachments/tickets', 'local');
             }
 
             $category = Category::firstOrCreate(

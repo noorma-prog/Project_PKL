@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PasswordSetupController;
 use App\Http\Controllers\PadalController;
 use App\Http\Controllers\TeknisiController;
+use App\Http\Controllers\TicketAttachmentController;
 use App\Http\Controllers\UserTicketController;
 use App\Models\User;
 use App\Services\EmailVerificationSender;
@@ -93,11 +94,22 @@ Route::post('/email/verification-notification', function (Request $request) {
     return back()->with('success', 'Tautan verifikasi baru telah dikirim.');
 })->middleware(['auth', 'throttle:6,1'])->name('verification.send');
 
+// Health check ringkas untuk monitoring server tanpa mengekspos metadata framework
+Route::get('/up', function () {
+    return response('OK', 200, ['Content-Type' => 'text/plain']);
+});
+
 // Logout & Profil Umum (Semua Role yang Login) - Use Case: Logout
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/profile', [AuthController::class, 'showProfile'])->name('profile.show');
     Route::put('/profile', [AuthController::class, 'updateProfile'])->name('profile.update');
+
+    // Berkas Lampiran Tiket Terlindungi Autentikasi & Otorisasi
+    Route::get('/tickets/{ticket}/attachment', [TicketAttachmentController::class, 'showAttachment'])
+        ->name('tickets.attachment');
+    Route::get('/tickets/{ticket}/resolution-attachment', [TicketAttachmentController::class, 'showResolutionAttachment'])
+        ->name('tickets.resolution-attachment');
 });
 
 // -------------------------------------------------------------

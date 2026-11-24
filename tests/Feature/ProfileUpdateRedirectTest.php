@@ -230,8 +230,8 @@ class ProfileUpdateRedirectTest extends TestCase
             ->put(route('profile.update'), [
                 'name' => 'User Test',
                 'current_password' => 'wrong-current-password',
-                'new_password' => 'newpassword123',
-                'new_password_confirmation' => 'newpassword123',
+                'new_password' => 'Newpassword123',
+                'new_password_confirmation' => 'Newpassword123',
             ]);
 
         $response->assertRedirect(route('profile.show'));

@@ -77,7 +77,7 @@ class AuthController extends Controller
                 return back()->withErrors([
                     'email' => $activationPending
                         ? 'Akun belum diaktifkan. Selesaikan pengaturan kata sandi melalui undangan email dari Administrator.'
-                        : 'Email atau kata sandi yang Anda masukkan salah.',
+                        : 'Email, kata sandi, atau jenis akun salah.',
                 ]);
             }
 
@@ -86,8 +86,11 @@ class AuthController extends Controller
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
 
+                RateLimiter::hit($throttleKey, 60);
+
                 return redirect()->route('login')->withErrors([
-                    'account_type' => 'Jenis akun yang dipilih tidak sesuai dengan akun yang terdaftar.',
+                    'email' => 'Email, kata sandi, atau jenis akun salah.',
+                    'account_type' => 'Email, kata sandi, atau jenis akun salah.',
                 ])->withInput([
                     'account_type' => $validated['account_type'],
                     'email' => $validated['email'],
@@ -124,7 +127,7 @@ class AuthController extends Controller
         RateLimiter::hit($throttleKey, 60);
 
         return back()->withErrors([
-            'email' => 'Email atau kata sandi yang Anda masukkan salah.',
+            'email' => 'Email, kata sandi, atau jenis akun salah.',
         ]);
     }
 
@@ -153,7 +156,7 @@ class AuthController extends Controller
             'satuan_kerja' => ['required', 'string', 'max:100'],
             'phone_number' => ['required', 'string', 'max:20'],
             'alamat' => ['nullable', 'string', 'max:255'],
-            'password' => ['required', 'confirmed', Password::min(6)],
+            'password' => ['required', 'confirmed', Password::min(10)->letters()->mixedCase()->numbers()],
         ], [
             'name.required' => 'Nama lengkap wajib diisi.',
             'email.required' => 'Alamat email wajib diisi.',
@@ -162,7 +165,10 @@ class AuthController extends Controller
             'satuan_kerja.required' => 'Satuan Kerja / Bagian wajib diisi.',
             'phone_number.required' => 'Nomor telepon/WhatsApp aktif wajib diisi.',
             'password.required' => 'Kata sandi wajib diisi.',
-            'password.min' => 'Kata sandi minimal 6 karakter.',
+            'password.min' => 'Kata sandi minimal 10 karakter dan harus memuat huruf besar, huruf kecil, serta angka.',
+            'password.letters' => 'Kata sandi minimal 10 karakter dan harus memuat huruf besar, huruf kecil, serta angka.',
+            'password.mixed' => 'Kata sandi minimal 10 karakter dan harus memuat huruf besar, huruf kecil, serta angka.',
+            'password.numbers' => 'Kata sandi minimal 10 karakter dan harus memuat huruf besar, huruf kecil, serta angka.',
             'password.confirmed' => 'Konfirmasi kata sandi tidak cocok.',
         ]);
 
@@ -251,7 +257,7 @@ class AuthController extends Controller
             'satuan_kerja' => ['nullable', 'string', 'max:100'],
             'nrp_nip' => ['nullable', 'string', 'max:50'],
             'current_password' => $currentPasswordRequired ? ['required', 'string'] : ['nullable', 'string'],
-            'new_password' => ['nullable', Password::min(6), 'confirmed'],
+            'new_password' => ['nullable', Password::min(10)->letters()->mixedCase()->numbers(), 'confirmed'],
         ];
 
         if ($user->isAdmin()) {
@@ -267,7 +273,10 @@ class AuthController extends Controller
             'email.unique' => 'Alamat email tersebut sudah digunakan akun lain.',
             'email.prohibited' => 'Alamat email tidak dapat diubah melalui profil akun ini.',
             'current_password.required' => 'Masukkan kata sandi saat ini untuk mengubah email atau kata sandi.',
-            'new_password.min' => 'Kata sandi baru minimal 6 karakter.',
+            'new_password.min' => 'Kata sandi baru minimal 10 karakter dan harus memuat huruf besar, huruf kecil, serta angka.',
+            'new_password.letters' => 'Kata sandi baru minimal 10 karakter dan harus memuat huruf besar, huruf kecil, serta angka.',
+            'new_password.mixed' => 'Kata sandi baru minimal 10 karakter dan harus memuat huruf besar, huruf kecil, serta angka.',
+            'new_password.numbers' => 'Kata sandi baru minimal 10 karakter dan harus memuat huruf besar, huruf kecil, serta angka.',
             'new_password.confirmed' => 'Konfirmasi kata sandi baru tidak cocok.',
         ]);
 

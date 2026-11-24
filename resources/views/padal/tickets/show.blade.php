@@ -60,7 +60,7 @@
 
                 @if($ticket->attachment)
                     <div class="mb-4">
-                        <a href="{{ asset('storage/' . $ticket->attachment) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                        <a href="{{ route('tickets.attachment', $ticket) }}" target="_blank" class="btn btn-sm btn-outline-primary">
                             <i class="bi bi-paperclip me-1"></i> Lihat Lampiran: {{ basename($ticket->attachment) }}
                         </a>
                     </div>
@@ -150,7 +150,7 @@
                 <div class="card-body p-4">
                     <p class="mb-3 text-dark" style="white-space: pre-line; line-height: 1.6;">{{ $ticket->resolution_notes }}</p>
                     @if($ticket->resolution_attachment)
-                        <a href="{{ asset('storage/' . $ticket->resolution_attachment) }}" target="_blank" class="btn btn-sm btn-outline-success">
+                        <a href="{{ route('tickets.resolution-attachment', $ticket) }}" target="_blank" class="btn btn-sm btn-outline-success">
                             <i class="bi bi-file-earmark-check me-1"></i> Bukti Penyelesaian Pekerjaan
                         </a>
                     @endif

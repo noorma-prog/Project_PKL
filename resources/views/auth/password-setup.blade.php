@@ -25,7 +25,8 @@
     <div class="mb-3">
         <label for="password" class="form-label">Kata Sandi Baru <span class="text-danger">*</span></label>
         <input type="password" name="password" id="password" class="form-control @error('password') is-invalid @enderror" 
-               placeholder="Minimal 8 karakter" minlength="8" required autofocus>
+               placeholder="Minimal 10 karakter (huruf besar, kecil, angka)" minlength="10" required autofocus>
+        <div class="form-text small">Minimal 10 karakter, kombinasi huruf besar, huruf kecil, dan angka.</div>
         @error('password')
             <div class="text-danger small mt-1">{{ $message }}</div>
         @enderror
@@ -34,7 +35,7 @@
     <div class="mb-4">
         <label for="password_confirmation" class="form-label">Konfirmasi Kata Sandi <span class="text-danger">*</span></label>
         <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" 
-               placeholder="Ulangi kata sandi" minlength="8" required>
+               placeholder="Ulangi kata sandi baru" minlength="10" required>
     </div>
 
     <button type="submit" class="btn btn-primary w-100 mb-3">Aktifkan Akun</button>

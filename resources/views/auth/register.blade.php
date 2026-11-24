@@ -82,7 +82,8 @@
         <div class="col-md-6">
             <label for="password" class="form-label">Kata Sandi <span class="text-danger">*</span></label>
             <input type="password" name="password" id="password" class="form-control @error('password') is-invalid @enderror" 
-                   placeholder="Minimal 6 karakter" required>
+                   placeholder="Minimal 10 karakter (huruf besar, kecil, angka)" minlength="10" required>
+            <div class="form-text small">Minimal 10 karakter, kombinasi huruf besar, huruf kecil, dan angka.</div>
             @error('password')
                 <div class="text-danger small mt-1">{{ $message }}</div>
             @enderror

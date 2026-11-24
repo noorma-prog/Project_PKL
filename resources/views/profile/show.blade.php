@@ -146,7 +146,8 @@
                             <div class="col-md-6">
                                 <label for="new_password" class="form-label fw-semibold small text-secondary">Kata Sandi Baru</label>
                                 <input type="password" name="new_password" id="new_password" class="form-control bg-white @error('new_password') is-invalid @enderror" 
-                                       placeholder="Minimal 6 karakter">
+                                       placeholder="Minimal 10 karakter (huruf besar, kecil, angka)" minlength="10">
+                                <div class="form-text small">Minimal 10 karakter dengan huruf besar, huruf kecil, dan angka.</div>
                                 @error('new_password')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror

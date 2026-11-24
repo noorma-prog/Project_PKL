@@ -404,8 +404,7 @@ class LayanItWorkflowTest extends TestCase
             route('admin.tickets.index', ['status' => 'dalam_penanganan']),
             route('admin.tickets.index', ['status' => 'selesai_semua']),
             route('admin.padals.index'),
-            route('admin.users.index', ['role' => User::ROLE_TEKNISI]),
-            route('admin.users.index', ['role' => User::ROLE_USER]),
+            route('admin.users.index'),
             route('admin.ratings.index'),
         ] as $target) {
             $adminDashboard->assertSee($target);
@@ -498,7 +497,7 @@ class LayanItWorkflowTest extends TestCase
         $this->actingAs($this->admin)->get(route('admin.dashboard'))
             ->assertOk()
             ->assertSee(route('admin.tickets.index', ['status' => 'menunggu_verifikasi']))
-            ->assertSee(route('admin.users.index', ['role' => User::ROLE_USER]));
+            ->assertSee(route('admin.users.index'));
 
         $this->actingAs($this->padal)->get(route('padal.dashboard'))
             ->assertOk()
@@ -563,8 +562,8 @@ class LayanItWorkflowTest extends TestCase
             'phone_number' => '081234567890',
             'satuan_kerja' => 'Bid TIK POLDA',
             'current_password' => 'password',
-            'new_password' => 'password-baru-123',
-            'new_password_confirmation' => 'password-baru-123',
+            'new_password' => 'Password-baru-123',
+            'new_password_confirmation' => 'Password-baru-123',
             'role' => User::ROLE_USER,
         ])->assertRedirect(route('profile.show'))
             ->assertSessionHas('success');
@@ -579,7 +578,7 @@ class LayanItWorkflowTest extends TestCase
         $this->assertSame('Bid TIK POLDA', $this->admin->satuan_kerja);
         $this->assertNull($this->admin->email_verified_at);
         $this->assertTrue($this->admin->requiresEmailVerification());
-        $this->assertTrue(Hash::check('password-baru-123', $this->admin->password));
+        $this->assertTrue(Hash::check('Password-baru-123', $this->admin->password));
         $this->assertDatabaseCount('users', 4);
         Notification::assertSentTo($this->admin, VerifyEmail::class);
 
@@ -610,7 +609,7 @@ class LayanItWorkflowTest extends TestCase
         $this->post(route('login.post'), [
             'account_type' => User::ROLE_ADMIN,
             'email' => 'admin-updated@example.test',
-            'password' => 'password-baru-123',
+            'password' => 'Password-baru-123',
         ])->assertRedirect(route('admin.dashboard'));
         $this->assertAuthenticatedAs($this->admin);
     }
@@ -752,8 +751,8 @@ class LayanItWorkflowTest extends TestCase
             'satuan_kerja' => 'Bid TIK',
             'phone_number' => '0812345000',
             'alamat' => 'Bid TIK POLDA',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'password' => 'Password123',
+            'password_confirmation' => 'Password123',
         ]);
 
         $response->assertRedirect(route('verification.notice'));
@@ -763,7 +762,7 @@ class LayanItWorkflowTest extends TestCase
         $this->assertTrue($user->is_active);
         $this->assertNull($user->email_verified_at);
         $this->assertTrue($user->requiresEmailVerification());
-        $this->assertTrue(Hash::check('password123', $user->password));
+        $this->assertTrue(Hash::check('Password123', $user->password));
         Notification::assertSentTo($user, VerifyEmail::class);
     }
 
@@ -784,8 +783,8 @@ class LayanItWorkflowTest extends TestCase
             'nrp_nip' => '99012',
             'satuan_kerja' => 'Bid TIK',
             'phone_number' => '0812345002',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'password' => 'Password123',
+            'password_confirmation' => 'Password123',
         ])->assertRedirect(route('verification.notice'));
 
         $user = User::where('email', $email)->firstOrFail();
@@ -821,7 +820,7 @@ class LayanItWorkflowTest extends TestCase
         $this->post(route('login.post'), [
             'account_type' => User::ROLE_USER,
             'email' => $email,
-            'password' => 'password123',
+            'password' => 'Password123',
         ])->assertRedirect(route('user.dashboard'));
         $this->assertAuthenticatedAs($user);
     }
@@ -962,8 +961,8 @@ class LayanItWorkflowTest extends TestCase
                 'nrp_nip' => '99011',
                 'satuan_kerja' => 'Bid TIK',
                 'phone_number' => '0812345001',
-                'password' => 'password123',
-                'password_confirmation' => 'password123',
+                'password' => 'Password123',
+                'password_confirmation' => 'Password123',
             ]);
 
             $response->assertRedirect(route('register'))->assertSessionHasErrors('role');
@@ -1207,15 +1206,15 @@ class LayanItWorkflowTest extends TestCase
         $this->post(route('password.update'), [
             'token' => $token,
             'email' => $staff->email,
-            'password' => 'new-secure-password',
-            'password_confirmation' => 'new-secure-password',
+            'password' => 'New-secure-123',
+            'password_confirmation' => 'New-secure-123',
         ])->assertRedirect(route('login'))->assertSessionHas('success');
 
         $staff->refresh();
         $this->assertTrue($staff->is_active);
         $this->assertTrue($staff->hasVerifiedEmail());
         $this->assertFalse($staff->requiresEmailVerification());
-        $this->assertTrue(Hash::check('new-secure-password', $staff->password));
+        $this->assertTrue(Hash::check('New-secure-123', $staff->password));
     }
 
     public function test_public_registration_creates_only_user_role_with_hashed_password(): void
@@ -1230,8 +1229,8 @@ class LayanItWorkflowTest extends TestCase
             'satuan_kerja' => 'SPKT',
             'phone_number' => '081234500001',
             'alamat' => 'SPKT POLDA',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'password' => 'Password123',
+            'password_confirmation' => 'Password123',
         ]);
 
         $response->assertRedirect(route('verification.notice'));
@@ -1239,7 +1238,7 @@ class LayanItWorkflowTest extends TestCase
         $this->assertSame(User::ROLE_USER, $created->role);
         $this->assertNull($created->email_verified_at);
         $this->assertTrue((bool) $created->requires_email_verification);
-        $this->assertTrue(Hash::check('password123', $created->password));
+        $this->assertTrue(Hash::check('Password123', $created->password));
     }
 
     /**

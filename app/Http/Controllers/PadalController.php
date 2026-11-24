@@ -296,7 +296,7 @@ class PadalController extends Controller
 
             $attachmentPath = null;
             if ($request->hasFile('resolution_attachment')) {
-                $attachmentPath = $request->file('resolution_attachment')->store('attachments/resolutions', 'public');
+                $attachmentPath = $request->file('resolution_attachment')->store('attachments/resolutions', 'local');
             }
 
             $ticket->status = Ticket::STATUS_SELESAI;
