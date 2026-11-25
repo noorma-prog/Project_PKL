@@ -662,15 +662,6 @@
                     <span>AS / {{ $roleLabel }}</span>
                 </div>
 
-                <button type="button"
-                        id="push-notification-toggle"
-                        class="btn btn-light rounded-circle p-1 d-flex align-items-center justify-content-center"
-                        style="width:34px;height:34px;border:1px solid var(--civic-line);"
-                        aria-label="Aktifkan notifikasi perangkat"
-                        title="Aktifkan notifikasi perangkat">
-                    <i id="push-notification-icon" class="bi bi-bell-slash text-secondary" style="font-size:.9rem;"></i>
-                </button>
-
                 {{-- Lonceng Notifikasi DB --}}
                 @php $unreadCount = auth()->user()->unreadNotifications->count(); @endphp
                 <div class="dropdown">
@@ -692,6 +683,16 @@
                                     <button type="submit" class="btn btn-link btn-sm text-primary p-0 text-decoration-none" style="font-size:0.75rem;">Tandai semua dibaca</button>
                                 </form>
                             @endif
+                        </div>
+                        <div class="px-3 py-2 border-bottom push-notification-control">
+                            <button type="button"
+                                    id="push-notification-toggle"
+                                    class="btn btn-sm btn-outline-secondary w-100 d-flex align-items-center justify-content-center"
+                                    aria-label="Aktifkan notifikasi perangkat"
+                                    title="Aktifkan notifikasi perangkat">
+                                <i id="push-notification-icon" class="bi bi-phone text-secondary me-2"></i>
+                                <span id="push-notification-label">Aktifkan notifikasi perangkat</span>
+                            </button>
                         </div>
                         <div style="max-height:300px; overflow-y:auto;">
                             @forelse(auth()->user()->notifications()->latest()->take(10)->get() as $notif)
@@ -848,8 +849,10 @@
     (() => {
         const toggle = document.getElementById('push-notification-toggle');
         const icon = document.getElementById('push-notification-icon');
+        const label = document.getElementById('push-notification-label');
+        const control = toggle?.closest('.push-notification-control');
         if (!toggle || !('serviceWorker' in navigator) || !('PushManager' in window)) {
-            if (toggle) toggle.style.display = 'none';
+            if (control) control.classList.add('d-none');
             return;
         }
 
@@ -866,11 +869,11 @@
         async function refreshPushState() {
             serviceWorkerRegistration = await navigator.serviceWorker.ready;
             const subscription = await serviceWorkerRegistration.pushManager.getSubscription();
-            icon.className = subscription
-                ? 'bi bi-bell-fill text-primary'
-                : 'bi bi-bell-slash text-secondary';
-            toggle.setAttribute('aria-label', subscription ? 'Nonaktifkan notifikasi perangkat' : 'Aktifkan notifikasi perangkat');
-            toggle.title = subscription ? 'Nonaktifkan notifikasi perangkat' : 'Aktifkan notifikasi perangkat';
+            const actionLabel = subscription ? 'Nonaktifkan notifikasi perangkat' : 'Aktifkan notifikasi perangkat';
+            icon.className = subscription ? 'bi bi-phone text-primary me-2' : 'bi bi-phone text-secondary me-2';
+            label.textContent = actionLabel;
+            toggle.setAttribute('aria-label', actionLabel);
+            toggle.title = actionLabel;
         }
 
         navigator.serviceWorker.register('/sw.js').then(async () => {

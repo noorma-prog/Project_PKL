@@ -10,7 +10,7 @@
         <div class="card shadow-sm border-0 rounded-3 bg-white">
             <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
                 <div>
-                    <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-bell-fill text-primary me-2"></i> Semua Notifikasi</h6>
+                    <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-list-ul text-primary me-2"></i> Semua Notifikasi</h6>
                     <small class="text-muted">Riwayat notifikasi penugasan tiket dan aktivitas sistem</small>
                 </div>
                 @if(auth()->user()->unreadNotifications->count() > 0)
@@ -44,7 +44,7 @@
                     </a>
                 @empty
                     <div class="text-center text-muted py-5">
-                        <i class="bi bi-bell-slash fs-2 d-block mb-2"></i>
+                        <i class="bi bi-inbox fs-2 d-block mb-2"></i>
                         Belum ada notifikasi.
                     </div>
                 @endforelse

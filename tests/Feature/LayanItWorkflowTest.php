@@ -119,6 +119,27 @@ class LayanItWorkflowTest extends TestCase
         $this->assertAuthenticatedAs($this->admin);
     }
 
+    public function test_each_role_dashboard_has_one_notification_bell_and_push_control(): void
+    {
+        $dashboards = [
+            [$this->admin, route('admin.dashboard')],
+            [$this->user, route('user.dashboard')],
+            [$this->padal, route('padal.dashboard')],
+            [$this->teknisi, route('teknisi.dashboard')],
+        ];
+
+        foreach ($dashboards as [$user, $route]) {
+            $response = $this->actingAs($user)->get($route)->assertOk();
+            $this->assertSame(1, substr_count($response->getContent(), 'bi-bell-fill'));
+            $response->assertSee('id="push-notification-toggle"', false);
+        }
+
+        $notificationPage = $this->actingAs($this->admin)
+            ->get(route('notifications.index'))
+            ->assertOk();
+        $this->assertSame(1, substr_count($notificationPage->getContent(), 'bi-bell-fill'));
+    }
+
     public function test_authenticated_users_open_their_role_dashboard_instead_of_redirect_looping_from_login(): void
     {
         $destinations = [
