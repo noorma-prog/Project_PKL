@@ -9,6 +9,7 @@ use App\Models\TicketRating;
 use App\Models\TicketStatusHistory;
 use App\Models\TicketTechnicianAssignment;
 use App\Models\User;
+use App\Notifications\TicketAssignedToPadal;
 use App\Services\AccountActivationSender;
 use App\Services\EmailVerificationSender;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -205,6 +206,11 @@ class AdminController extends Controller
                 'notes' => 'Laporan dikonfirmasi oleh Administrator (' . Auth::user()->name . ') dan ditugaskan kepada ' . $padal->nama_padal . ' (Ketua: ' . ($padal->leader ? $padal->leader->name : '-') . ').' . ($ticket->admin_notes ? ' Catatan: ' . $ticket->admin_notes : ''),
             ]);
 
+            // Kirim notifikasi ke akun Padal (leader)
+            if ($padal->leader) {
+                $padal->leader->notify(new TicketAssignedToPadal($ticket, Auth::user()));
+            }
+
             return redirect()->route('admin.tickets.show', $ticket->id)
                 ->with('success', 'Laporan berhasil dikonfirmasi dan penugasan telah diteruskan ke ' . $padal->nama_padal . '.');
         });
@@ -236,8 +242,9 @@ class AdminController extends Controller
 
             $oldStatus = $ticket->status;
             $oldPadalName = $ticket->padal ? $ticket->padal->nama_padal : 'Padal Sebelumnya';
+            $padalChanged = (int) $ticket->padal_id !== (int) $padal->id;
 
-            if ((int) $ticket->padal_id !== (int) $padal->id) {
+            if ($padalChanged) {
                 TicketTechnicianAssignment::where('ticket_id', $ticket->id)
                     ->whereNull('released_at')
                     ->update(['released_at' => now()]);
@@ -258,6 +265,11 @@ class AdminController extends Controller
                 'status_to' => Ticket::STATUS_MENUNGGU_KONFIRMASI_PADAL,
                 'notes' => 'Administrator mengubah penugasan tiket dari ' . $oldPadalName . ' menjadi ' . $padal->nama_padal . '.' . ($validated['admin_notes'] ? ' Alasan/Catatan: ' . $validated['admin_notes'] : ''),
             ]);
+
+            // Kirim notifikasi hanya jika penugasan benar-benar berubah.
+            if ($padalChanged && $padal->leader) {
+                $padal->leader->notify(new TicketAssignedToPadal($ticket, Auth::user()));
+            }
 
             return redirect()->route('admin.tickets.show', $ticket->id)
                 ->with('success', 'Penugasan berhasil diperbarui ke ' . $padal->nama_padal . '.');

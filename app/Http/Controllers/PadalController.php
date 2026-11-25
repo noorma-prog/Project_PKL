@@ -10,6 +10,7 @@ use App\Models\TicketRating;
 use App\Models\TicketStatusHistory;
 use App\Models\TicketTechnicianAssignment;
 use App\Models\User;
+use App\Notifications\TicketAssignedToTeknisi;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -481,11 +482,17 @@ class PadalController extends Controller
 
         foreach (array_diff($technicianIds, $currentIds) as $technicianId) {
             TicketTechnicianAssignment::create([
-                'ticket_id' => $ticket->id,
-                'user_id' => $technicianId,
+                'ticket_id'   => $ticket->id,
+                'user_id'     => $technicianId,
                 'assigned_by' => Auth::id(),
                 'assigned_at' => now(),
             ]);
+
+            // Kirim notifikasi ke Teknisi yang baru ditugaskan
+            $teknisi = User::find($technicianId);
+            if ($teknisi) {
+                $teknisi->notify(new TicketAssignedToTeknisi($ticket, Auth::user()));
+            }
         }
     }
 

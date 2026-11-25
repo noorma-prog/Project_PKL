@@ -7,6 +7,8 @@ use App\Http\Controllers\PadalController;
 use App\Http\Controllers\TeknisiController;
 use App\Http\Controllers\TicketAttachmentController;
 use App\Http\Controllers\UserTicketController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PushSubscriptionController;
 use App\Models\User;
 use App\Services\EmailVerificationSender;
 use Illuminate\Http\Request;
@@ -104,6 +106,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/profile', [AuthController::class, 'showProfile'])->name('profile.show');
     Route::put('/profile', [AuthController::class, 'updateProfile'])->name('profile.update');
+
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/{id}/read', [NotificationController::class, 'read'])->name('notifications.read');
+    Route::post('/notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
+    Route::get('/push/vapid-public-key', [PushSubscriptionController::class, 'publicKey'])->name('push.vapid-public-key');
+    Route::post('/push/subscription', [PushSubscriptionController::class, 'subscribe'])->name('push.subscription');
+    Route::delete('/push/subscription', [PushSubscriptionController::class, 'unsubscribe'])->name('push.subscription.unsubscribe');
 
     // Berkas Lampiran Tiket Terlindungi Autentikasi & Otorisasi
     Route::get('/tickets/{ticket}/attachment', [TicketAttachmentController::class, 'showAttachment'])
