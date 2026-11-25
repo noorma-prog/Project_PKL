@@ -59,5 +59,29 @@
     <!-- Bootstrap 5.3 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     @yield('scripts')
+    <script>
+    window.togglePassword = function togglePassword(inputId, btnId) {
+        const input = document.getElementById(inputId);
+        const button = btnId ? document.getElementById(btnId) : null;
+        if (!input) return;
+
+        const isHidden = input.getAttribute('type') === 'password';
+        input.setAttribute('type', isHidden ? 'text' : 'password');
+
+        const icon = button?.querySelector('i') || document.getElementById(btnId + '-icon');
+        if (icon) icon.className = isHidden ? 'bi bi-eye-slash' : 'bi bi-eye';
+        if (button) {
+            const label = isHidden ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi';
+            button.setAttribute('aria-label', label);
+            button.setAttribute('title', label);
+        }
+    };
+
+    document.addEventListener('click', function (event) {
+        const button = event.target.closest('[data-password-target]');
+        if (!button) return;
+        window.togglePassword(button.dataset.passwordTarget, button.id);
+    });
+    </script>
 </body>
 </html>

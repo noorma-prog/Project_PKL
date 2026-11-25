@@ -37,8 +37,13 @@
 
     <div class="mb-3">
         <label for="password" class="form-label">Kata Sandi <span class="text-danger">*</span></label>
-        <input type="password" name="password" id="password" class="form-control @error('password') is-invalid @enderror" 
-               value="" placeholder="Masukkan kata sandi" autocomplete="off" required>
+        <div class="input-group">
+            <input type="password" name="password" id="password" class="form-control @error('password') is-invalid @enderror" 
+                   value="" placeholder="Masukkan kata sandi" autocomplete="off" required>
+            <button type="button" class="btn btn-outline-secondary" id="togglePassword" data-password-target="password" tabindex="-1" aria-label="Tampilkan kata sandi">
+                <i class="bi bi-eye" id="togglePassword-icon"></i>
+            </button>
+        </div>
         @error('password')
             <div class="text-danger small mt-1">{{ $message }}</div>
         @enderror

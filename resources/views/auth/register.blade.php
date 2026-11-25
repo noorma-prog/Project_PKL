@@ -81,8 +81,13 @@
     <div class="row g-3 mb-4">
         <div class="col-md-6">
             <label for="password" class="form-label">Kata Sandi <span class="text-danger">*</span></label>
-            <input type="password" name="password" id="password" class="form-control @error('password') is-invalid @enderror" 
-                   placeholder="Minimal 10 karakter (huruf besar, kecil, angka)" minlength="10" required>
+            <div class="input-group">
+                <input type="password" name="password" id="password" class="form-control @error('password') is-invalid @enderror" 
+                       placeholder="Minimal 10 karakter (huruf besar, kecil, angka)" minlength="10" required>
+                <button type="button" class="btn btn-outline-secondary" id="togglePassword" data-password-target="password" tabindex="-1" aria-label="Tampilkan kata sandi">
+                    <i class="bi bi-eye" id="togglePassword-icon"></i>
+                </button>
+            </div>
             <div class="form-text small">Minimal 10 karakter, kombinasi huruf besar, huruf kecil, dan angka.</div>
             @error('password')
                 <div class="text-danger small mt-1">{{ $message }}</div>
@@ -90,8 +95,13 @@
         </div>
         <div class="col-md-6">
             <label for="password_confirmation" class="form-label">Konfirmasi Kata Sandi <span class="text-danger">*</span></label>
-            <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" 
-                   placeholder="Ulangi kata sandi" required>
+            <div class="input-group">
+                <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" 
+                       placeholder="Ulangi kata sandi" required>
+                <button type="button" class="btn btn-outline-secondary" id="togglePasswordConf" data-password-target="password_confirmation" tabindex="-1" aria-label="Tampilkan konfirmasi sandi">
+                    <i class="bi bi-eye" id="togglePasswordConf-icon"></i>
+                </button>
+            </div>
         </div>
     </div>
 

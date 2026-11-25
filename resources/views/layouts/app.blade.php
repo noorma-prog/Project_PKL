@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="manifest" href="{{ asset('manifest.json') }}">
+    <meta name="theme-color" content="#1e3a8a">
     <title>@yield('title', 'Dashboard') - LayanIT POLDA</title>
 
     <!-- Google Fonts: Plus Jakarta Sans -->
@@ -660,6 +662,54 @@
                     <span>AS / {{ $roleLabel }}</span>
                 </div>
 
+                <button type="button"
+                        id="push-notification-toggle"
+                        class="btn btn-light rounded-circle p-1 d-flex align-items-center justify-content-center"
+                        style="width:34px;height:34px;border:1px solid var(--civic-line);"
+                        aria-label="Aktifkan notifikasi perangkat"
+                        title="Aktifkan notifikasi perangkat">
+                    <i id="push-notification-icon" class="bi bi-bell-slash text-secondary" style="font-size:.9rem;"></i>
+                </button>
+
+                {{-- Lonceng Notifikasi DB --}}
+                @php $unreadCount = auth()->user()->unreadNotifications->count(); @endphp
+                <div class="dropdown">
+                    <button class="btn btn-light rounded-circle p-1 d-flex align-items-center justify-content-center position-relative"
+                            style="width: 34px; height: 34px; border: 1px solid var(--civic-line);" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifikasi">
+                        <i class="bi bi-bell-fill text-secondary" style="font-size: 0.9rem;"></i>
+                        @if($unreadCount > 0)
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:0.6rem;">
+                                {{ $unreadCount > 9 ? '9+' : $unreadCount }}
+                            </span>
+                        @endif
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end shadow-sm border mt-2 p-0" style="border-radius:10px; min-width:300px; max-width:340px;">
+                        <div class="px-3 py-2 border-bottom d-flex justify-content-between align-items-center">
+                            <span class="fw-bold small">Notifikasi</span>
+                            @if($unreadCount > 0)
+                                <form action="{{ route('notifications.read-all') }}" method="POST" class="mb-0">
+                                    @csrf
+                                    <button type="submit" class="btn btn-link btn-sm text-primary p-0 text-decoration-none" style="font-size:0.75rem;">Tandai semua dibaca</button>
+                                </form>
+                            @endif
+                        </div>
+                        <div style="max-height:300px; overflow-y:auto;">
+                            @forelse(auth()->user()->notifications()->latest()->take(10)->get() as $notif)
+                                <a href="{{ route('notifications.read', $notif->id) }}" class="dropdown-item py-2 px-3 border-bottom {{ $notif->read_at ? 'text-muted' : 'fw-semibold' }}" style="white-space:normal; font-size:0.82rem;">
+                                    <i class="bi bi-info-circle me-1 {{ $notif->read_at ? 'text-muted' : 'text-primary' }}"></i>
+                                    {{ $notif->data['message'] ?? 'Notifikasi baru' }}
+                                    <div class="text-muted" style="font-size:0.72rem;">{{ $notif->created_at->diffForHumans() }}</div>
+                                </a>
+                            @empty
+                                <div class="text-center text-muted py-3" style="font-size:0.82rem;">Tidak ada notifikasi.</div>
+                            @endforelse
+                        </div>
+                        <div class="px-3 py-2 text-center border-top">
+                            <a href="{{ route('notifications.index') }}" class="text-primary text-decoration-none" style="font-size:0.8rem;">Lihat semua notifikasi</a>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="dropdown">
                     <button class="btn btn-light rounded-circle p-1 d-flex align-items-center justify-content-center" 
                             style="width: 34px; height: 34px; border: 1px solid var(--civic-line);" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Menu profil pengguna">
@@ -771,5 +821,118 @@
         });
     </script>
     @yield('scripts')
+    <script>
+    window.togglePassword = function togglePassword(inputId, btnId) {
+        const input = document.getElementById(inputId);
+        const button = btnId ? document.getElementById(btnId) : null;
+        if (!input) return;
+
+        const isHidden = input.getAttribute('type') === 'password';
+        input.setAttribute('type', isHidden ? 'text' : 'password');
+
+        const icon = button?.querySelector('i') || document.getElementById(btnId + '-icon');
+        if (icon) icon.className = isHidden ? 'bi bi-eye-slash' : 'bi bi-eye';
+        if (button) {
+            const label = isHidden ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi';
+            button.setAttribute('aria-label', label);
+            button.setAttribute('title', label);
+        }
+    };
+
+    document.addEventListener('click', function (event) {
+        const button = event.target.closest('[data-password-target]');
+        if (!button) return;
+        window.togglePassword(button.dataset.passwordTarget, button.id);
+    });
+
+    (() => {
+        const toggle = document.getElementById('push-notification-toggle');
+        const icon = document.getElementById('push-notification-icon');
+        if (!toggle || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+            if (toggle) toggle.style.display = 'none';
+            return;
+        }
+
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+        let serviceWorkerRegistration;
+
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+            const rawData = window.atob(base64);
+            return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
+        }
+
+        async function refreshPushState() {
+            serviceWorkerRegistration = await navigator.serviceWorker.ready;
+            const subscription = await serviceWorkerRegistration.pushManager.getSubscription();
+            icon.className = subscription
+                ? 'bi bi-bell-fill text-primary'
+                : 'bi bi-bell-slash text-secondary';
+            toggle.setAttribute('aria-label', subscription ? 'Nonaktifkan notifikasi perangkat' : 'Aktifkan notifikasi perangkat');
+            toggle.title = subscription ? 'Nonaktifkan notifikasi perangkat' : 'Aktifkan notifikasi perangkat';
+        }
+
+        navigator.serviceWorker.register('/sw.js').then(async () => {
+            await refreshPushState();
+        }).catch(() => {});
+
+        toggle.addEventListener('click', async () => {
+            try {
+                serviceWorkerRegistration = await navigator.serviceWorker.ready;
+                let subscription = await serviceWorkerRegistration.pushManager.getSubscription();
+
+                if (subscription) {
+                    const endpoint = subscription.endpoint;
+                    await subscription.unsubscribe();
+                    await fetch('/push/subscription', {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrf,
+                            'Accept': 'application/json',
+                        },
+                        body: JSON.stringify({ endpoint }),
+                    });
+                    await refreshPushState();
+                    return;
+                }
+
+                const permission = await Notification.requestPermission();
+                if (permission !== 'granted') {
+                    alert('Izin notifikasi belum diberikan.');
+                    return;
+                }
+
+                const keyResponse = await fetch('/push/vapid-public-key', { headers: { 'Accept': 'application/json' } });
+                const keyData = await keyResponse.json();
+                if (!keyData.enabled) {
+                    alert('Notifikasi push belum dikonfigurasi oleh administrator.');
+                    return;
+                }
+
+                subscription = await serviceWorkerRegistration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(keyData.publicKey),
+                });
+                const subscriptionJson = subscription.toJSON();
+
+                const response = await fetch('/push/subscription', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrf,
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify(subscriptionJson),
+                });
+                if (!response.ok) throw new Error('Gagal menyimpan langganan notifikasi.');
+                await refreshPushState();
+            } catch (error) {
+                alert(error.message || 'Perangkat tidak dapat mengaktifkan notifikasi.');
+            }
+        });
+    })();
+    </script>
 </body>
 </html>

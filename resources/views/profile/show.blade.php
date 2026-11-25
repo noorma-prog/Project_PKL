@@ -135,27 +135,42 @@
                                     <span class="text-muted fw-normal">(wajib diisi bila mengganti email atau sandi baru)</span>
                                 @endif
                             </label>
-                            <input type="password" name="current_password" id="current_password" class="form-control bg-white @error('current_password') is-invalid @enderror"
-                                   placeholder="Masukkan kata sandi saat ini">
+                            <div class="input-group">
+                                <input type="password" name="current_password" id="current_password" class="form-control bg-white @error('current_password') is-invalid @enderror"
+                                       placeholder="Masukkan kata sandi saat ini">
+                                <button type="button" class="btn btn-outline-secondary" id="toggleCurrPwd" data-password-target="current_password" tabindex="-1" aria-label="Tampilkan kata sandi saat ini">
+                                    <i class="bi bi-eye" id="toggleCurrPwd-icon"></i>
+                                </button>
+                            </div>
                             @error('current_password')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                         </div>
 
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label for="new_password" class="form-label fw-semibold small text-secondary">Kata Sandi Baru</label>
-                                <input type="password" name="new_password" id="new_password" class="form-control bg-white @error('new_password') is-invalid @enderror" 
-                                       placeholder="Minimal 10 karakter (huruf besar, kecil, angka)" minlength="10">
+                                <div class="input-group">
+                                    <input type="password" name="new_password" id="new_password" class="form-control bg-white @error('new_password') is-invalid @enderror" 
+                                           placeholder="Minimal 10 karakter (huruf besar, kecil, angka)" minlength="10">
+                                    <button type="button" class="btn btn-outline-secondary" id="toggleNewPwd" data-password-target="new_password" tabindex="-1" aria-label="Tampilkan kata sandi baru">
+                                        <i class="bi bi-eye" id="toggleNewPwd-icon"></i>
+                                    </button>
+                                </div>
                                 <div class="form-text small">Minimal 10 karakter dengan huruf besar, huruf kecil, dan angka.</div>
                                 @error('new_password')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
                             </div>
                             <div class="col-md-6">
                                 <label for="new_password_confirmation" class="form-label fw-semibold small text-secondary">Ulangi Kata Sandi Baru</label>
-                                <input type="password" name="new_password_confirmation" id="new_password_confirmation" class="form-control bg-white"
-                                       placeholder="Ketik ulang kata sandi baru">
+                                <div class="input-group">
+                                    <input type="password" name="new_password_confirmation" id="new_password_confirmation" class="form-control bg-white"
+                                           placeholder="Ketik ulang kata sandi baru">
+                                    <button type="button" class="btn btn-outline-secondary" id="toggleConfPwd" data-password-target="new_password_confirmation" tabindex="-1" aria-label="Tampilkan konfirmasi sandi">
+                                        <i class="bi bi-eye" id="toggleConfPwd-icon"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

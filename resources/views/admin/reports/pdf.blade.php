@@ -49,6 +49,7 @@
             letter-spacing: 0.02em;
             text-transform: uppercase;
             color: #111827;
+            text-decoration: underline;
         }
 
         .meta {
@@ -141,7 +142,7 @@
         </div>
 
         <h1>REKAPITULASI PENANGANAN LAPORAN GANGGUAN IT</h1>
-        <div class="meta">LayanIT &nbsp;•&nbsp; Periode: {{ $reportStart->translatedFormat('d') }}–{{ $reportEnd->translatedFormat('d F Y') }} &nbsp;•&nbsp; Dibuat: {{ $createdAt->translatedFormat('d F Y, H:i') }} WITA</div>
+        <div class="meta">Sistem Helpdesk Terpadu <strong>LayanIT</strong> &nbsp;•&nbsp; Periode: {{ $reportStart->translatedFormat('d F Y') }} s.d. {{ $reportEnd->translatedFormat('d F Y') }}</div>
 
         @if($isEmpty)
             <div class="no-data">Tidak ada laporan untuk periode ini.</div>

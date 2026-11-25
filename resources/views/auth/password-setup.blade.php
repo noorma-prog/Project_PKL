@@ -24,8 +24,13 @@
 
     <div class="mb-3">
         <label for="password" class="form-label">Kata Sandi Baru <span class="text-danger">*</span></label>
-        <input type="password" name="password" id="password" class="form-control @error('password') is-invalid @enderror" 
-               placeholder="Minimal 10 karakter (huruf besar, kecil, angka)" minlength="10" required autofocus>
+        <div class="input-group">
+            <input type="password" name="password" id="password" class="form-control @error('password') is-invalid @enderror" 
+                   placeholder="Minimal 10 karakter (huruf besar, kecil, angka)" minlength="10" required autofocus>
+            <button type="button" class="btn btn-outline-secondary" id="togglePassword" data-password-target="password" tabindex="-1" aria-label="Tampilkan kata sandi baru">
+                <i class="bi bi-eye" id="togglePassword-icon"></i>
+            </button>
+        </div>
         <div class="form-text small">Minimal 10 karakter, kombinasi huruf besar, huruf kecil, dan angka.</div>
         @error('password')
             <div class="text-danger small mt-1">{{ $message }}</div>
@@ -34,8 +39,13 @@
 
     <div class="mb-4">
         <label for="password_confirmation" class="form-label">Konfirmasi Kata Sandi <span class="text-danger">*</span></label>
-        <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" 
-               placeholder="Ulangi kata sandi baru" minlength="10" required>
+        <div class="input-group">
+            <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" 
+                   placeholder="Ulangi kata sandi baru" minlength="10" required>
+            <button type="button" class="btn btn-outline-secondary" id="togglePasswordConf" data-password-target="password_confirmation" tabindex="-1" aria-label="Tampilkan konfirmasi sandi">
+                <i class="bi bi-eye" id="togglePasswordConf-icon"></i>
+            </button>
+        </div>
     </div>
 
     <button type="submit" class="btn btn-primary w-100 mb-3">Aktifkan Akun</button>

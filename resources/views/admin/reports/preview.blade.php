@@ -38,12 +38,9 @@
 
         <!-- Judul Rekapitulasi -->
         <div class="text-center mb-4">
-            <h5 class="fw-bold text-uppercase mb-1" style="color: #17243C; letter-spacing: 0.04em; font-size: 1.05rem;">REKAPITULASI PENANGANAN LAPORAN GANGGUAN IT</h5>
+            <h5 class="fw-bold text-uppercase mb-1" style="color: #17243C; letter-spacing: 0.04em; font-size: 1.05rem;"><u>REKAPITULASI PENANGANAN LAPORAN GANGGUAN IT</u></h5>
             <div class="text-secondary small">
                 Sistem Helpdesk Terpadu <strong>LayanIT</strong> &bull; Periode: {{ $reportStart->translatedFormat('d F Y') }} s.d. {{ $reportEnd->translatedFormat('d F Y') }}
-            </div>
-            <div class="text-muted" style="font-size: 11.5px; margin-top: 3px;">
-                Tanggal Cetak: {{ $createdAt->translatedFormat('d F Y, H:i') }} WITA
             </div>
         </div>
 
