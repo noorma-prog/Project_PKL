@@ -140,7 +140,16 @@ class AuthController extends Controller
             return $this->redirectBasedOnRole(Auth::user());
         }
 
-        return view('auth.register');
+        $googleRegistration = session('google_registration');
+
+        if (! is_array($googleRegistration)
+            || ! is_int($googleRegistration['expires_at'] ?? null)
+            || $googleRegistration['expires_at'] < now()->timestamp) {
+            session()->forget('google_registration');
+            $googleRegistration = null;
+        }
+
+        return view('auth.register', compact('googleRegistration'));
     }
 
     /**
@@ -148,10 +157,29 @@ class AuthController extends Controller
      */
     public function register(Request $request)
     {
+        $googleRegistration = $request->session()->get('google_registration');
+        $googleRegistrationEmail = is_array($googleRegistration)
+            && is_string($googleRegistration['email'] ?? null)
+            && is_int($googleRegistration['expires_at'] ?? null)
+            && $googleRegistration['expires_at'] >= now()->timestamp
+                ? strtolower($googleRegistration['email'])
+                : null;
+
+        if (! $googleRegistrationEmail) {
+            $request->session()->forget('google_registration');
+        }
+
         $validated = $request->validate([
             'role' => ['prohibited'],
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            'email' => [
+                'required',
+                'string',
+                'email',
+                'max:255',
+                ...($googleRegistrationEmail ? [Rule::in([$googleRegistrationEmail])] : []),
+                'unique:users,email',
+            ],
             'nrp_nip' => ['required', 'string', 'max:50'],
             'satuan_kerja' => ['required', 'string', 'max:100'],
             'phone_number' => ['required', 'string', 'max:20'],
@@ -161,6 +189,7 @@ class AuthController extends Controller
             'name.required' => 'Nama lengkap wajib diisi.',
             'email.required' => 'Alamat email wajib diisi.',
             'email.unique' => 'Email tersebut sudah terdaftar.',
+            'email.in' => 'Gunakan email Google terverifikasi yang dipilih untuk pendaftaran ini.',
             'nrp_nip.required' => 'NRP atau NIP wajib diisi.',
             'satuan_kerja.required' => 'Satuan Kerja / Bagian wajib diisi.',
             'phone_number.required' => 'Nomor telepon/WhatsApp aktif wajib diisi.',
@@ -171,6 +200,13 @@ class AuthController extends Controller
             'password.numbers' => 'Kata sandi minimal 10 karakter dan harus memuat huruf besar, huruf kecil, serta angka.',
             'password.confirmed' => 'Konfirmasi kata sandi tidak cocok.',
         ]);
+
+        if ($googleRegistrationEmail
+            && User::query()->whereRaw('LOWER(email) = ?', [$googleRegistrationEmail])->exists()) {
+            return back()->withErrors([
+                'email' => 'Email tersebut sudah terdaftar. Silakan masuk menggunakan akun yang ada.',
+            ])->withInput();
+        }
 
         $user = User::create([
             'name' => $validated['name'],
@@ -186,6 +222,7 @@ class AuthController extends Controller
             'requires_email_verification' => true,
         ]);
 
+        $request->session()->forget('google_registration');
         $verificationSent = app(EmailVerificationSender::class)->send($user);
         Auth::login($user);
         $request->session()->regenerate();

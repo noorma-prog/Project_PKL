@@ -14,6 +14,10 @@
     </div>
 @endif
 
+@if(session('google_registration_notice'))
+    <div class="alert alert-info small mb-3" role="alert">{{ session('google_registration_notice') }}</div>
+@endif
+
 @if($errors->has('role'))
     <div class="alert alert-warning small mb-3" role="alert">{{ $errors->first('role') }}</div>
 @endif
@@ -25,7 +29,7 @@
         <div class="col-md-6">
             <label for="name" class="form-label">Nama Lengkap <span class="text-danger">*</span></label>
             <input type="text" name="name" id="name" class="form-control @error('name') is-invalid @enderror" 
-                   value="{{ old('name') }}" placeholder="Andi Saputra" required autofocus>
+                   value="{{ old('name', $googleRegistration['name'] ?? null) }}" placeholder="Andi Saputra" required autofocus>
             @error('name')
                 <div class="text-danger small mt-1">{{ $message }}</div>
             @enderror
@@ -71,7 +75,11 @@
         <div class="col-md-6">
             <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
             <input type="email" name="email" id="email" class="form-control @error('email') is-invalid @enderror" 
-                   value="{{ old('email') }}" placeholder="nama@polda.go.id" required>
+                   value="{{ old('email', $googleRegistration['email'] ?? null) }}" placeholder="nama@polda.go.id" required
+                   @if($googleRegistration) readonly @endif>
+            @if($googleRegistration)
+                <div class="form-text small">Email Google terverifikasi. Pendaftaran ini hanya membuat akun User/Pelapor.</div>
+            @endif
             @error('email')
                 <div class="text-danger small mt-1">{{ $message }}</div>
             @enderror

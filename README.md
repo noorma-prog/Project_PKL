@@ -69,6 +69,25 @@ php artisan config:cache
 
 Verification links are valid for 60 minutes (`auth.verification.expire`) and can be reissued from the verification page or the login page; resend requests are throttled. Verification is persisted on the user record and does not depend on the browser session that registered. A valid link clears stale login errors, returns the user to login with a success notice, and pre-fills only the verified email (never the password); invalid or expired links retain signed-URL validation and show a resend option. Login checks the stored password hash and reports a role mismatch separately; public registration can only create reporter accounts. Confirm delivery and the complete registration-to-verification flow with a mailbox you control after deployment.
 
+## Google sign-in (local setup)
+
+Google sign-in uses Laravel Socialite and only authenticates an existing LayanIT account whose email exactly matches a Google-verified email. The account role, active status, and staff approval status remain controlled by the LayanIT database. A verified Google email without an account may continue to the existing reporter registration form; no account is created until that form is submitted, and the role is always set to User/Pelapor. The normal LayanIT email-verification process still applies. Keep the existing `.env` private and never commit OAuth credentials.
+
+1. In [Google Cloud Console](https://console.cloud.google.com/), create or select a project and configure the OAuth consent screen (Google Auth Platform). Select the appropriate audience; while the app is in testing, add the Google accounts that may sign in under **Test users**.
+2. Create an OAuth client ID with application type **Web application**. Add the origin used by the local app (for example `http://localhost:8000`) under **Authorized JavaScript origins** if the console requests it. This server-side OAuth flow does not otherwise require JavaScript origins.
+3. Add the exact callback URI `http://localhost:8000/auth/google/callback` under **Authorized redirect URIs** for local testing. For later hosting configuration, add `https://layanit.tesmagang.site/auth/google/callback` as a separate URI. Google requires an exact match including scheme, host, port, and path.
+4. Put the issued values only in the local `.env` file:
+
+   ```dotenv
+   GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+   GOOGLE_CLIENT_SECRET=your-client-secret
+   GOOGLE_REDIRECT_URI=http://localhost:8000/auth/google/callback
+   ```
+
+   Start the local application with `APP_URL=http://localhost:8000`, then run `php artisan config:clear` after changing the values. Never paste the real client secret into source files, screenshots, or Git.
+
+Production is not configured or deployed by this change. After approval, set the three Google OAuth environment values on the host (with `GOOGLE_REDIRECT_URI=https://layanit.tesmagang.site/auth/google/callback`), make sure HTTPS session cookies and the existing proxy/URL settings are correct, and clear/cache Laravel config as part of the approved deployment procedure.
+
 ## Ticket categories and activity schedules
 
 Reporters enter a free-text issue category; the submitted category is stored as a category record and linked to the ticket. Admin category CRUD routes are disabled while existing category/ticket records remain intact. Each ticket also stores the requested activity date and start/end times separately from its automatically generated submission timestamps. Old tickets keep nullable schedule fields.

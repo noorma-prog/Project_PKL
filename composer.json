@@ -9,6 +9,7 @@
         "php": "^8.3",
         "barryvdh/laravel-dompdf": "*",
         "laravel/framework": "^13.0",
+        "laravel/socialite": "^5.33",
         "laravel/tinker": "^3.0",
         "minishlink/web-push": "*"
     },

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\PasswordSetupController;
 use App\Http\Controllers\PadalController;
 use App\Http\Controllers\TeknisiController;
@@ -31,6 +32,10 @@ Route::get('/', function () {
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+    Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirectToProvider'])
+        ->name('auth.google.redirect');
+    Route::get('/auth/google/callback', [GoogleAuthController::class, 'handleProviderCallback'])
+        ->name('auth.google.callback');
     Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
     Route::post('/register', [AuthController::class, 'register'])->name('register.post');
 });
